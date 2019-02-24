@@ -46,19 +46,19 @@ All other items read from your ETS file which are not used in your items files w
 These can be used for copy & paste if you need to add items at a later stage.  Adjust **config.py** for your preferred
 names:
 
-'''python
+```python
 THINGS_UNUSED_FILE = "unused.things"
 ITEMS_UNUSED_FILE = "unused.items"
 ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
-'''
+```
 
 You definitly need to adjust the following settings that the script can determine what are your actors and what are your
 controls.  This may be improved in future by extracting more information from the *knxproj* files.  See *TODOS.md*.
 
-'''python
+```python
 ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD, 2000-1-O000A_P-2174, "
 CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, 2000-1-O000A_P-1118, O000A_P-3180, 2000-0_P-2343, LED,"
-'''
+```
 
 Depending on your setup the following message may be ok if you have a *read-only* devive or a dummy group address.  Or
 it may mean that you need to adjust the above settings.
@@ -68,10 +68,10 @@ it may mean that you need to adjust the above settings.
 To find out the names of your ETS components you can look into the files containing debug information about all your knx
 and openhab items.
 
-'''python
+```python
 # files containing all information read
 DEBUG_KNX = "knx.txt"
 DEBUG_OH = "oh.txt"
-'''
+```
 
 If you have any issue feel free to contact me or open an issue in the repository.
