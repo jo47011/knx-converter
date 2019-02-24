@@ -32,14 +32,13 @@ generic device in the thing file and no controls are added.
 
 Due to a general architecture change of the knx binding you only get events in OpenHAB if the item in KNX changes.
 Furthermore you will not get any events from wall mounted switches or alike.  To overcome this problem you need so
-called control items.  These will be created by this script automatically.  See below and the example folder for
-details.
+called control items.  These will be created by this script automatically.  See below for details.
 
-If you have an OH Item (group address) with exactly one *actor* assigned the correct device ID will be used in the thing
-file and items file.  If there is more than one actor in ETS assigned (e.g. ALL_LIGHTS_SWITCH) it will be added to the
-generic device.
+If you have an OH Item (group address) with exactly one *actor* assigned in your ETS the correct device ID will be used
+in the thing file and items file.  If there is more than one actor in ETS assigned (e.g. ALL_LIGHTS_SWITCH) it will be
+added to the generic device.
 
-If one or more *control*, like a wall mounted switch) is assigned in the ETS a *control* item is created in the generic
+If one or more *control* (e.g. a wall mounted switch) is assigned in the ETS a *control* item is created in the generic
 section and will be added to your items file directly below the main item.
 
 All other items read from your ETS file which are not used in your items files will be written to an alternative file.
@@ -47,6 +46,18 @@ These can be used for copy & paste if you need to add items at a later stage.  A
 names:
 
 ```python
+# knx1 openhab item file(s)
+ITEMS_FILES = "../items/knx1/myhome.items , \
+    ../items/knx1/heating.items, \
+    ../items/knx1/window.items, \
+    ../items/knx1/xbmc.items"
+
+# converted item files will be created in this directory
+ITEM_RESULT_DIR = "../items/"
+
+# out file names
+THINGS_FILE = "../things/knx.things"
+
 THINGS_UNUSED_FILE = "unused.things"
 ITEMS_UNUSED_FILE = "unused.items"
 ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
@@ -60,12 +71,12 @@ ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD, 2000-1-O000A_P-2174, "
 CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, 2000-1-O000A_P-1118, O000A_P-3180, 2000-0_P-2343, LED,"
 ```
 
-Depending on your setup the following message may be ok if you have a *read-only* devive or a dummy group address.  Or
+Depending on your setup the following message may be ok if you have a *read-only* device or a dummy group address.  Or
 it may mean that you need to adjust the above settings.
 
 > INFO: No Actor found for: 4/0/24   	using: generic	BWM_Aussen_Garage
 
-To find out the names of your ETS components you can look into the files containing debug information about all your knx
+To find the names of your ETS components you can look into the files containing debug information about all your knx
 and openhab items.
 
 ```python
