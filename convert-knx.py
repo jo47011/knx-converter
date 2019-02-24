@@ -608,14 +608,14 @@ if __name__ == '__main__':
 
     # debug output
     try:
-        with open(DEBUG_KNX, 'w') as file:
+        with open(config.DEBUG_KNX, 'w') as file:
             for item in sorted(knxItems):
                 print(item, file=file)
     except (NameError, AttributeError) as excep:
         pass
 
     try:
-        with open(DEBUG_OH, 'w') as file:
+        with open(config.DEBUG_OH, 'w') as file:
             for item in sorted(ohItems):
                 print(item, file=file)
     except (NameError, AttributeError) as excep:
