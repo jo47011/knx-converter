@@ -1,12 +1,12 @@
 # Adjust this file to your the settings
 
-# knx1 openhab item file(s)
+# knx1 openhab items file(s)
 ITEMS_FILES = "../items/knx1/myhome.items , \
     ../items/knx1/heating.items, \
     ../items/knx1/window.items, \
     ../items/knx1/xbmc.items"
 
-# converted item files will be created in this directory
+# converted items files will be created in this directory
 ITEM_RESULT_DIR = "../items/"
 
 # out file names

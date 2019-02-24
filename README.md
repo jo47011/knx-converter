@@ -8,7 +8,7 @@ binding.  It converts existing knx1 item files and generates a knx.thing file.  
 and items.  Furthermore it will most likely not work out of the box for everybody but may be a good start for whoever
 wants to automate that process.
 
-It has been tested with **ETS 4** project file and runs on a Mac thus it should work on any Unix system.  Not sure about
+It has been tested with an **ETS 4** project file and runs on a Mac thus it should work on any Unix system.  Not sure about
 Windows.
 
 ## Prerequisites
@@ -19,7 +19,7 @@ Windows.
 ## Installation
 
 1. Copy the bundle into a new directory.
-2. Create a new sub-directory (e.g. *knxporj*) and enter it.
+2. Create a new sub-directory (e.g. `knxproj`) and enter it.
 3. Export your `knxproj` file and unzip it into the sub-directory.
    Yes your `knxproj` projext file is a zip file.
 4. Search for a file  0.xml.
@@ -67,8 +67,14 @@ You definitly need to adjust the following settings that the script can determin
 controls.  This may be improved in future by extracting more information from the *knxproj* files.  See *TODOS.md*.
 
 ```python
-ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD, 2000-1-O000A_P-2174, "
-CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, 2000-1-O000A_P-1118, O000A_P-3180, 2000-0_P-2343, LED,"
+# These are the primary addresses which will be used for read/write
+ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD,"
+
+# These will be added as -control items
+CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, LED,"
+
+# These will ignored, uncomment to use
+# IGNORE_DEVICES = "LED,"
 ```
 
 Depending on your setup the following message may be ok if you have a *read-only* device or a dummy group address.  Or
@@ -77,7 +83,7 @@ it may mean that you need to adjust the above settings.
 > INFO: No Actor found for: 4/0/24   	using: generic	BWM_Aussen_Garage
 
 To find the names of your ETS components you can look into the files containing debug information about all your knx
-and openhab items.
+and openhab items after a 1st run of this script.
 
 ```python
 # files containing all information read
@@ -86,3 +92,5 @@ DEBUG_OH = "oh.txt"
 ```
 
 If you have any issue feel free to contact me or open an issue in the repository.
+
+Have fun...
