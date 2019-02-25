@@ -15,274 +15,13 @@ import os
 import sys
 from collections import namedtuple
 import xml.etree.ElementTree as ET
+from collections import OrderedDict as od
 import re
 import subprocess
 from os import path
-from shutil import move
-from dataclasses import dataclass, field
-from collections import OrderedDict as od
 
 import config
-
-knxItems = []
-ohItems = []
-
-
-@dataclass(order=True)
-class OpenHABItem:
-    '''Helper class for storing relevant data per OH Item
-    '''
-    sort_index: int = field(init=False, repr=False)
-    line: str
-    address: str = None
-    type: str = None
-    name: str = None
-    dpt: str = None
-    feedback: str = ""
-    expire: str = ""
-    autoupdate: str = ""
-    groupaddress_oh1: str = None
-    groupaddress_oh2: str = None
-
-    def __str__(self):
-        return (
-            f"OpenHABItem:\n\n"
-            f"    line            :\t{self.line}"
-            f"    address         :\t{self.address}\n"
-            f"    type            :\t{self.type}\n"
-            f"    name            :\t{self.name}\n"
-            f"    dpt             :\t{self.dpt}\n"
-            f"    feedback        :\t{self.feedback}\n"
-            f"    expire          :\t{self.expire}\n"
-            f"    autoupdate      :\t{self.autoupdate}\n"
-            f"    groupaddress_oh1:\t{self.groupaddress_oh1}\n"
-            f"    groupaddress_oh2:\t{self.groupaddress_oh2}\n"
-        )
-
-    # extract knx address and OH" group address config
-    def __post_init__(self):
-        # find knx address etc.
-        self.groupaddress_oh1 = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', self.line).group(1)
-        self.type, self.name = self.line.split()[:2]
-        ga = re.search(r'[ \t]*knx[ \t]*=[ \t]*"(.*)"', self.groupaddress_oh1).group(1)
-        self.address = re.search(r'([0-9]*/[0-9]*/[0-9]*).*', ga).group(1)
-
-        # datapoint
-        if ':' in ga:
-            self.dpt = re.search(r'[<>]?(.*):.*', ga).group(1)
-
-        # feedback
-        if '<' in ga:
-            self.feedback = re.search(r'.*<(.*:)?([0-9]*/[0-9]*/[0-9]*).*', ga).group(2)
-
-        # align spaces around = and , 1st
-        ga = self.groupaddress_oh1.replace(" = ", "=").replace(" ,", ",").replace(", ", ",").strip()
-
-        # extract option expire if applicable
-        if 'expire' in ga:
-            self.expire = re.search(r'.*[ \t]*expire[ \t]*=[ \t]*("[\w,=]*")[,]?.*', ga).group(1)
-
-        # extract option autoupdate if applicable
-        if 'autoupdate' in ga:
-            self.autoupdate = re.search(r'.*[ \t]*autoupdate[ \t]*=[ \t]*("[\w]*").*', ga).group(1)
-
-        # assign OH2 group address
-        if self.type == 'Dimmer':
-            values = re.sub(r'knx[ \t]*=|"', '', ga).split(',')
-            if len(values) >= 3:
-                s, i, p = map(str.strip, values[:3])
-                self.groupaddress_oh2 = f'switch = "{s}", position = "{p}", increaseDecrease = "{i}"'
-            else:
-                self.groupaddress_oh2 = f'switch = "{values[0]}"'
-
-        elif self.type == 'Rollershutter':
-            u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|"', '', ga).split(',')[:3])
-            self.groupaddress_oh2 = f'upDown = "{u}", stopMove = "{s}", position = "{p}"'
-
-        else:
-            # default is ga
-            self.groupaddress_oh2 = ga.replace("knx", "ga")
-
-        # assign sortable number
-        self.sort_index = 0
-        for idx, f in enumerate(self.address.split('/')):
-            self.sort_index += int(f) * 10**(3 - idx)
-
-        # add OpenHAB item
-        search = list(filter(lambda x: self == x, ohItems))
-        if len(search) == 0:
-            ohItems.append(self)
-        else:
-            print("ERROR: The following address is assigned twice in your item files:")
-            print(search[0])
-            sys.exit(1)
-
-        # assign corresponding KNX devices
-        if len(knxItems) > 0:
-            devices = [x for x in knxItems if x.address == self.address]
-
-            # print(devices)
-
-            selection = devices.copy()
-            try:
-                selection = list(filter(lambda x: not self.inList(x.device_id, config.IGNORE_DEVICES), devices))
-            except (NameError, AttributeError) as excep:
-                pass
-
-            if len(devices) == 0:
-                print(f"OH Item not found in ETS export: {self.address.ljust(8,' ')} "
-                      f"\tusing {config.DEVICE_GENERIC}"
-                      f"\t{self.name}")
-                entry = createGenericKNXItem(ohItem=self)
-                entry.ohItem = self
-            elif len(selection) == 0:
-                print(f"OH Item filtered out in ETS export: {self.address.ljust(8,' ')} "
-                      f"\tusing: {config.DEVICE_GENERIC}")
-                entry = createGenericKNXItem(ohItem=self)
-            else:
-
-                # join knxItem and ohItem
-                actors = []
-                try:
-                    actors = list(filter(lambda x: self.inList(x.device_id, config.ACTORS),
-                                          selection))
-                except (NameError, AttributeError) as excep:
-                    pass
-
-                if len(actors) == 0:
-                    print(f"INFO: No Actor found for: {self.address.ljust(8,' ')} "
-                          f"\tusing: {config.DEVICE_GENERIC}"
-                          f"\t{self.name}")
-                    entry = createGenericKNXItem(ohItem=self)
-                else:
-                    for entry in actors:
-                        entry.ohItem = self
-
-                controls = []
-                try:
-                    controls = list(filter(lambda x: self.inList(x.device_id, config.CONTROLS), selection))
-                except (NameError, AttributeError) as excep:
-                    pass
-
-                for entry in controls:
-                    entry.ohItem = self
-                    entry.isControl = True
-
-                missing = list(filter(lambda x: not self.inList(x.device_id, config.ACTORS + ',' + config.CONTROLS),
-                                      selection))
-
-                if len(missing) > 0:
-                    for entry in missing:
-                        print(f"OH Items not assigned: {self.address.ljust(8,' ')}: {entry}")
-
-    def inList(self, str, searchString):
-        for i in searchString.replace(" ", "").split(","):
-            if i != "" and i in str:
-                return True
-        return False
-
-    def __eq__(self, other):
-        return self.address == other.address and self.name == other.name
-
-
-@dataclass(order=True)
-class KNXItem:
-    '''Helper class for storing relevant data per GA
-    '''
-    sort_index: int = field(init=False, repr=False)
-    name: str
-    address: str
-    device_address: str = config.DEVICE_GENERIC
-    refid: str = ""
-    device_id: str = ""
-    building: str = ""
-    dpt: str = None
-    ohItem: OpenHABItem = None
-    isControl: bool = False
-    exported: bool = False
-    ignore: bool = False
-
-    def __str__(self):
-        return (
-            f"KNXItem:\n\n"
-            f"    name          :\t{self.name}\n"
-            f"    address       :\t{self.address}\n"
-            f"    device_address:\t{self.device_address}\n"
-            f"    refid         :\t{self.refid}\n"
-            f"    device_id     :\t{self.device_id}\n"
-            f"    building      :\t{self.building}\n"
-            f"    dpt           :\t{self.dpt}\n"
-            f"    ohItem        :\t{self.ohItem.name if self.ohItem else 'None'}\n"
-            f"    isControl     :\t{self.isControl}\n"
-        )
-
-    def __post_init__(self):
-        if len(list(filter(lambda x: x == self, knxItems))) == 0:
-            knxItems.append(self)
-
-        # assign sortable number by device_address and knx address
-        self.sort_index = 0
-        for idx, f in enumerate(self.address.split('/')):
-            self.sort_index += int(f) * 10**(3 - idx)
-
-        if '.' in self.device_address:
-            for idx, f in enumerate(self.device_address.split('.')):
-                self.sort_index += int(f) * 10**(3 - idx) * 10**4
-
-    def __eq__(self, other):
-        return self.getID() == other.getID() and self.isControl == other.isControl
-
-    def __hash__(self):
-        return hash(self.getID() + "1" if self.isControl else "0")
-
-    def getID(self):
-        return self.device_address + '-' + self.address.replace("/", "_")
-
-    def getDeviceName(self, prefix=""):
-        result = prefix + self.device_address.replace(".", "_")
-        return result
-
-    def getExpire(self):
-        if self.ohItem is not None and self.ohItem.expire:
-            return ", expire=" + self.ohItem.expire
-        return ""
-
-    def getAutoUpdate(self):
-        if self.ohItem is not None and len(self.ohItem.autoupdate) > 0:
-            return ", autoupdate=" + self.ohItem.autoupdate
-        return ""
-
-    def isGeneric(self):
-        return self.device_address == config.DEVICE_GENERIC
-
-    def getItemRepresentation(self, line=None):
-        if self.ohItem is None:
-            name = self.getID()
-        else:
-            name = self.ohItem.name
-
-        channel = (config.CHANNEL.replace('<generic>', self.getDeviceName())
-                   + self.getExpire() + self.getAutoUpdate())
-
-        if line is None:
-            unique = ""
-            if self.isControl:
-                if self.isGeneric:
-                    unique = config.CONTROL_SUFFIX
-                else:
-                    unique = self.getDeviceName('_')
-
-            if self.ohItem is None:
-                type = config.UNUSED_TYPE
-            else:
-                type = self.ohItem.type
-
-            result = (f'{type} {name}{unique} "{self.name}" '
-                      + '{' + channel.replace('<name>', name + unique) + '}')
-        else:
-            result = re.sub(r'{.*}', '{' + channel.replace('<name>', name) + '}', line)
-        return result
-
+from items import KNXItem, OpenHABItem
 
 def trace(func):
     '''Helper decorator function.
@@ -298,24 +37,6 @@ def trace(func):
 
         return original_result
     return wrapper
-
-
-def createGenericKNXItem(ohItem=None, isControl=False):
-    '''Adds a gereric (empty) KNXItem
-
-    :param OpenHABItem item: OpenHABItem to be referred to
-    '''
-    return KNXItem(name=ohItem.name,
-                   address=ohItem.address,
-                   ohItem=ohItem,
-                   isControl=isControl)
-
-
-def createGenericControls():
-    '''Creates a generic control entry for any control that is used in an item file
-    '''
-    for item in list(od.fromkeys(filter(lambda x: x.ohItem is not None and x.isControl, knxItems)).keys()):
-        entry = createGenericKNXItem(ohItem=item.ohItem, isControl=True)
 
 
 def readParts(type, root, part, name=''):
@@ -378,14 +99,21 @@ def cleanupFeedback():
 
         return result
 
-    before = len(knxItems)
+    before = len(KNXItem.items())
 
     # remove already assigned feedback GAs at the same device
-    for item in filter(lambda x: x.ohItem is not None and x.ohItem.feedback, knxItems):
-        for foundItem in [x for x in knxItems if isAssignedFeedback(x, item)]:
-            knxItems.remove(foundItem)
+    for item in filter(lambda x: x.ohItem is not None and x.ohItem.feedback, KNXItem.items()):
+        for foundItem in [x for x in KNXItem.items() if isAssignedFeedback(x, item)]:
+            KNXItem.remove(foundItem)
 
-    # print(f"Debug: remove feedback {before} => {len(knxItems)}")
+    # print(f"Debug: remove feedback {before} => {len(KNXItem.items())}")
+
+
+def createGenericControls():
+    '''Creates a generic control entry for any control that is used in an item file
+    '''
+    for item in list(od.fromkeys(filter(lambda x: x.ohItem is not None and x.isControl, KNXItem.items())).keys()):
+        entry = KNXItem.createGeneric(ohItem=item.ohItem, isControl=True)
 
 
 def readETSFile():
@@ -502,13 +230,13 @@ def writeItemFiles():
                             sys.exit(1)
 
                         # find according ETS Actor by GroupAddress
-                        items = [x for x in knxItems if x.address == knx and not x.isControl]
+                        items = [x for x in KNXItem.items() if x.address == knx and not x.isControl]
                         if len(items) == 0:
                             # seems like we're running w/o ETS project file so create a generic entry
                             name = line.split()[1:2][0]
-                            search = [x for x in ohItems if x.address == knx and x.name == name]
+                            search = [x for x in item.OpenHABItem.allItems if x.address == knx and x.name == name]
                             if len(search) == 1:
-                                item = createGenericKNXItem(ohItem=search[0])
+                                item = KNXItem.createGeneric(ohItem=search[0])
                             else:
                                 # we're lost now so we give up
                                 print(f"ERROR: OH entry {name} w/ Group Address {knx} not found.")
@@ -521,7 +249,7 @@ def writeItemFiles():
                                 item.ignore = True  # "remove others"
                                 item.exported = True
 
-                            item = createGenericKNXItem(ohItem=items[0].ohItem)
+                            item = KNXItem.createGeneric(ohItem=items[0].ohItem)
 
                         else:
                             # exactly one item entry found
@@ -531,7 +259,7 @@ def writeItemFiles():
                         item.exported = True
 
                         # add generic control item if aplicable
-                        items = [x for x in knxItems if x.getID() == item.getID() and x.isGeneric and x.isControl]
+                        items = [x for x in KNXItem.items() if x.getID() == item.getID() and x.isGeneric and x.isControl]
                         if len(items) > 1:
                             # should not happen there should be only one generic item
                             print(f"ERROR: Multiple generic controls w/ Group Address {knx} found.")
@@ -568,7 +296,7 @@ def writeFiles():
         print('// These group addresses are available in your ETS '
               'but are not configured/used in any of your item files', file=unusedfile)
 
-        for item in sorted(list(filter(lambda x: not x.exported and not x.ignore, knxItems))):
+        for item in sorted(list(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()))):
 
             if item.ohItem is None:
                 file = unusedfile
@@ -588,10 +316,10 @@ def writeFiles():
 
     # write thing files
     writeThingFile(filter(lambda x: x.ohItem is not None and not x.ignore
-                          and (x.isGeneric or not x.isControl), knxItems),
+                          and (x.isGeneric or not x.isControl), KNXItem.items()),
                    config.THINGS_FILE)
 
-    writeThingFile(filter(lambda x: not x.exported and not x.ignore, knxItems), config.THINGS_UNUSED_FILE,
+    writeThingFile(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()), config.THINGS_UNUSED_FILE,
                    '// These things are available in your ETS but are not configured/used in any of your item files\n')
 
 
@@ -609,14 +337,14 @@ if __name__ == '__main__':
     # debug output
     try:
         with open(config.DEBUG_KNX, 'w') as file:
-            for item in sorted(knxItems):
+            for item in sorted(KNXItem.items()):
                 print(item, file=file)
     except (NameError, AttributeError) as excep:
         pass
 
     try:
         with open(config.DEBUG_OH, 'w') as file:
-            for item in sorted(ohItems):
+            for item in sorted(OpenHABItem.items()):
                 print(item, file=file)
     except (NameError, AttributeError) as excep:
         pass
