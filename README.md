@@ -18,16 +18,17 @@ Windows.
 
 ## Installation
 
-1. Copy the bundle into a new directory.
-2. Create a new sub-directory (e.g. `knxproj`) and enter it.
-3. Export your `knxproj` file and unzip it into the sub-directory.
+1. Make a backup.
+2. Copy the bundle into a new directory.
+3. Create a new sub-directory (e.g. `knxproj`) and enter it.
+4. Export your `knxproj` file and unzip it into the sub-directory.
    Yes your `knxproj` projext file is a zip file.
-4. Search for a file  0.xml.
+5. Search for a file  0.xml.
    In my case it is in the directory `knxproj/P-02A7/0.xml`.
-5. Read and adjust the **config.py** file.
-6. To run it call: `./convert-knx.py`
+6. Read and adjust the **config.py** file.
+7. To run it call: `./convert-knx.py`
 
-Steps 2-4 are optional.  You may also use the script w/o an ETS project file.  Then all your items will be assigned to a
+Steps 3-5 are optional.  You may also use the script w/o an ETS project file.  Then all your items will be assigned to a
 generic device in the thing file and no controls are added.
 
 Due to a general architecture change of the knx binding you only get events in OpenHAB if the item in KNX changes.
