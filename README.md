@@ -22,7 +22,7 @@ Windows.
 2. Copy the bundle into a new directory.
 3. Create a new sub-directory (e.g. `knxproj`) and enter it.
 4. Export your `knxproj` file and unzip it into the sub-directory.
-   Yes your `knxproj` projext file is a zip file.
+   Yes your `knxproj` project file is a zip file.
 5. Search for a file  0.xml.
    In my case it is in the directory `knxproj/P-02A7/0.xml`.
 6. Read and adjust the **config.py** file.

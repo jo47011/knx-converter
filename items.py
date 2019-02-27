@@ -169,9 +169,20 @@ class OpenHABItem(Item):
                     for entry in missing:
                         print(f"OH Items not assigned: {self.address.ljust(8,' ')}: {entry}")
 
-    def inList(self, str, searchString):
+                intersect = list(filter(lambda x: x in controls, actors))
+
+                if len(intersect) > 0:
+                    for entry in intersect:
+                        print(f"KNX Item matches actor and control: {self.address.ljust(8,' ')}:")
+                        self.inList(entry.device_id, config.ACTORS, True)
+                        self.inList(entry.device_id, config.CONTROLS, True)
+                        print(entry)
+
+    def inList(self, str, searchString, debug=False):
         for i in searchString.replace(" ", "").split(","):
             if i != "" and i in str:
+                if debug:
+                    print(f"{i} in {str} matches")
                 return True
         return False
 

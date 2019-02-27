@@ -23,6 +23,7 @@ from os import path
 import config
 from items import KNXItem, OpenHABItem
 
+
 def trace(func):
     '''Helper decorator function.
     Add @trace before your function for debug output'''
@@ -91,11 +92,11 @@ def cleanupFeedback():
     def isAssignedFeedback(item1, item2):
         '''Returns true if group address of a device is already used as a feedback address at the same device
         '''
-        result = (item1 != item2 and                              # not the same item
+        result = (item1 != item2 and                                  # not the same item
                   item1.device_address == item2.device_address and    # same device
                   item1.ohItem is None and                            # item1 not assigned in OH item file
                   item2.ohItem is not None and                        # item2 is assigned in OH item file
-                  item1.address == item2.ohItem.feedback)              # item1 used as feedback of item2
+                  item1.address == item2.ohItem.feedback)             # item1 used as feedback of item2
 
         return result
 
@@ -112,14 +113,22 @@ def cleanupFeedback():
 def createGenericControls():
     '''Creates a generic control entry for any control that is used in an item file
     '''
-    for item in list(od.fromkeys(filter(lambda x: x.ohItem is not None and x.isControl, KNXItem.items())).keys()):
+    allControls = list(od.fromkeys(filter(lambda x: x.ohItem is not None and x.isControl, KNXItem.items())).keys())
+    for item in allControls:
         entry = KNXItem.createGeneric(ohItem=item.ohItem, isControl=True)
+        item.ignore = True
 
 
 def readETSFile():
     '''Reads the ETS Project file if defined.
     '''
     try:
+        config.PROJECTFILE
+    except (NameError, AttributeError) as excep:
+        config.PROJECTFILE = None
+        print('PROJECTFILE is not defined (see config.py), so we proceed w/o ETS input.')
+
+    if config.PROJECTFILE is not None:
         project = ET.parse(config.PROJECTFILE)
         root = project.getroot()
         buildings = root.find('.//' + config.FIND_BUILDINGS)
@@ -138,14 +147,17 @@ def readETSFile():
                 # print(part)
                 readParts(config.FIND_TRADEPART, root, part)
 
-    except (NameError, AttributeError) as excep:
-        print('PROJECTFILE is not defined (see config.py), so we proceed w/o ETS input.')
-
 
 def readOHFiles():
     '''Reads the OpenHAB item file(s) if defined
     '''
     try:
+        config.ITEMS_FILES
+    except (NameError, AttributeError) as excep:
+        config.ITEMS_FILES = None
+        print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
+
+    if config.ITEMS_FILES is not None:
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):
             print(f"reading {myfile}")
             with open(myfile, 'r') as infile:
@@ -154,9 +166,6 @@ def readOHFiles():
                     if line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', line):
                         # remember values for things file
                         item = OpenHABItem(line=line)
-
-    except (NameError, AttributeError) as excep:
-        print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
 
 
 def writeThingFile(filter, filename, comment=''):
@@ -207,6 +216,12 @@ def writeThingFile(filter, filename, comment=''):
 
 def writeItemFiles():
     try:
+        config.ITEMS_FILES
+    except (NameError, AttributeError) as excep:
+        config.ITEMS_FILES = None
+        print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
+
+    if config.ITEMS_FILES is not None:
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):
 
             outfilename = os.path.join(config.ITEM_RESULT_DIR, path.basename(myfile))
@@ -234,7 +249,7 @@ def writeItemFiles():
                         if len(items) == 0:
                             # seems like we're running w/o ETS project file so create a generic entry
                             name = line.split()[1:2][0]
-                            search = [x for x in item.OpenHABItem.allItems if x.address == knx and x.name == name]
+                            search = [x for x in OpenHABItem.allItems if x.address == knx and x.name == name]
                             if len(search) == 1:
                                 item = KNXItem.createGeneric(ohItem=search[0])
                             else:
@@ -259,7 +274,8 @@ def writeItemFiles():
                         item.exported = True
 
                         # add generic control item if aplicable
-                        items = [x for x in KNXItem.items() if x.getID() == item.getID() and x.isGeneric and x.isControl]
+                        items = [x for x in KNXItem.items() if x.getID() == item.getID()
+                                 and x.isGeneric and x.isControl]
                         if len(items) > 1:
                             # should not happen there should be only one generic item
                             print(f"ERROR: Multiple generic controls w/ Group Address {knx} found.")
@@ -270,8 +286,6 @@ def writeItemFiles():
                             items[0].exported = True
 
             print(f"written: {outfilename}")
-    except (NameError, AttributeError) as excep:
-        print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
 
 
 def writeFiles():
