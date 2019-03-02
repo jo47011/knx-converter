@@ -43,9 +43,19 @@ UNUSED_TYPE = 'Switch'
 # Suffix for generic control items
 CONTROL_SUFFIX = '_Control'
 
+# If defined, only these controls will be added to the item and things file.
+# If undefined all possible controls will be created, this may be a good start
+# but may flood your system.
+WANTED_CONTROLS = "Switch_Szene_Garage_links, \
+    Switch_Szene_Garage_rechts , \
+    Licht_EG_Gaderobe, \
+    Switch_Beschattung_OG, \
+    Licht_ALL"
+
 # values in <...> will be replaced. So do not change <...> values.
 CHANNEL = ' channel="knx:device:bridge:<generic>:<name>" '
 
+# IMPORTANT: adjust your IP (KNX and local) below
 THING_HEADER = '''Bridge knx:ip:bridge [
     ipAddress="192.168.x.xxx",
     portNumber=3671,

@@ -92,6 +92,23 @@ DEBUG_KNX = "knx.txt"
 DEBUG_OH = "oh.txt"
 ```
 
+### NEW: 20190302
+
+Since the script produces a lot of control items which I don't really need I added a new feature.  You can now set the
+following variable to prevent the creation of the unused control items.  They will still be created in the
+ITEMS_UNUSED_CONTROLS_FILE so you can copy & paste them later once you may need them.
+
+```
+# If defined, only these controls will be added to the item and things file.
+# If undefined all possible controls will be created, this may be a good start
+# but may flood your system.
+WANTED_CONTROLS = "Switch_Szene_Garage_links, \
+    Switch_Szene_Garage_rechts , \
+    Licht_EG_Gaderobe, \
+    Switch_Beschattung_OG"
+```
+
+
 If you have any issue feel free to contact me or open an issue in the repository.
 
 Have fun...
