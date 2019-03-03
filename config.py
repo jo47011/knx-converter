@@ -101,17 +101,15 @@ CHANNELS = (
 # only one line supported, if you have more than one you need to implement it.
 ETS_LINE_PREFIX = "1.1."
 
-# depending on your ETS version you may need to adjust the /11
-# just look at the 1st tag in your 0.xml
-NS_URL = '{http://knx.org/xml/project/11}'
-FIND_BUILDINGS = NS_URL + 'Buildings'   # Gebaeude
-FIND_BUILDINGPART = NS_URL + 'BuildingPart'
-FIND_TRADES = NS_URL + 'Trades'         # Gewerke
-FIND_TRADEPART = NS_URL + 'Trade'
-FIND_DEVICEREF = NS_URL + 'DeviceInstanceRef'
-FIND_DEVICE = NS_URL + 'DeviceInstance'
-FIND_COMREF = NS_URL + 'ComObjectInstanceRef'
-FIND_CONNECTOR = NS_URL + 'Connectors'
-FIND_SEND = NS_URL + 'Send'
-FIND_RECEIVE = NS_URL + 'Receive'
-FIND_GA = NS_URL + 'GroupAddress'
+# ETS xml tags, usually no need to change those
+FIND_BUILDINGS = 'Buildings'   # Gebaeude
+FIND_BUILDINGPART = 'BuildingPart'
+FIND_TRADES = 'Trades'         # Gewerke
+FIND_TRADEPART = 'Trade'
+FIND_DEVICEREF = 'DeviceInstanceRef'
+FIND_DEVICE = 'DeviceInstance'
+FIND_COMREF = 'ComObjectInstanceRef'
+FIND_CONNECTOR = 'Connectors'
+FIND_SEND = 'Send'
+FIND_RECEIVE = 'Receive'
+FIND_GA = 'GroupAddress'

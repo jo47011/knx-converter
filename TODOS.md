@@ -1,6 +1,5 @@
 The following issues may be improved one day:
 * Read datapoints from ets (dpt)
-* Improve NS_URL = '{http://knx.org/xml/project/11}'
 * Determine correct item type based on *knxproj* files what are actors,
   controls, etc.  So we can improve:
   - As of now all items read from ETS which are not in any items file

@@ -76,7 +76,7 @@ class OpenHABItem(Item):
             self.feedback = re.search(r'.*<(.*:)?([0-9]*/[0-9]*/[0-9]*).*', ga).group(2)
 
         # remove all spaces in group address
-        ga = self.groupaddress_oh1.strip()
+        ga = self.groupaddress_oh1.replace(" ","")
 
         # extract option expire if applicable
         if 'expire' in ga:

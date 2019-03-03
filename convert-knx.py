@@ -55,7 +55,7 @@ def readParts(type, root, part, name=''):
     name = (name + " " + part.attrib['Name']).lstrip()
 
     # find all devices in building
-    for devref in part.findall(config.FIND_DEVICEREF):
+    for devref in part.findall(getNsURL(root) + config.FIND_DEVICEREF):
         readDevice(root, devref.attrib['RefId'], name)
 
     # apply for all building sub-parts
@@ -64,21 +64,22 @@ def readParts(type, root, part, name=''):
 
 
 def readDevice(root, ref, building):
-    device = root.findall('.//' + config.FIND_DEVICE + "[@Id='" + ref + "']")[0]
+    device = root.findall(getNsURL(root) + config.FIND_DEVICE + "[@Id='" + ref + "']")[0]
 
-    for comobj in device.findall('.//' + config.FIND_COMREF):
+    for comobj in device.findall(getNsURL(root) + config.FIND_COMREF):
         if 'DatapointType' not in comobj.attrib.keys():
             continue
 
         dpt = comobj.attrib['DatapointType']  # FIXME: need some mapping here to dtps
 
-        for connector in comobj.findall('.//' + config.FIND_CONNECTOR):
+        for connector in comobj.findall(getNsURL(root) + config.FIND_CONNECTOR):
 
-            for send in connector.findall('.//' + config.FIND_SEND) + connector.findall('.//' + config.FIND_RECEIVE):
+            for send in (connector.findall(getNsURL(root) + config.FIND_SEND) +
+                         connector.findall(getNsURL(root) + config.FIND_RECEIVE)):
 
                 if 'GroupAddressRefId' in send.keys():
                     ga_ref = send.attrib['GroupAddressRefId']
-                    ga = root.findall('.//' + config.FIND_GA + "[@Id='" + ga_ref + "']")[0]
+                    ga = root.findall(getNsURL(root) + config.FIND_GA + "[@Id='" + ga_ref + "']")[0]
                     ga_str = ga2str(int(ga.attrib['Address']))
 
                     if len(ga_str) > 0:
@@ -131,6 +132,14 @@ def createGenericControls():
         item.ignore = True
 
 
+def getNsURL(root):
+    if not root.tag.endswith('KNX'):
+        print(f'ERROR: no KNX root found in: {root}')
+        sys.exit(1)
+
+    return './/' + root.tag[:-3]    # .//{http://knx.org/xml/project/11}
+
+
 def readETSFile():
     '''Reads the ETS Project file if defined.
     '''
@@ -143,7 +152,7 @@ def readETSFile():
     if config.PROJECTFILE is not None:
         project = ET.parse(config.PROJECTFILE)
         root = project.getroot()
-        buildings = root.find('.//' + config.FIND_BUILDINGS)
+        buildings = root.find(getNsURL(root) + config.FIND_BUILDINGS)
         print(f"reading {config.PROJECTFILE}")
 
         if buildings is None:
@@ -152,7 +161,7 @@ def readETSFile():
             for part in buildings:
                 readParts(config.FIND_BUILDINGPART, root, part)
 
-        trades = root.find('.//' + config.FIND_TRADES)
+        trades = root.find(getNsURL(root) + config.FIND_TRADES)
 
         if trades is not None:
             for part in trades:
@@ -260,7 +269,8 @@ def writeItemFiles():
                             sys.exit(1)
 
                         # find according ETS Actor by GroupAddress
-                        items = [x for x in KNXItem.items() if x.address == knx and not x.isControl]
+                        items = [x for x in KNXItem.items() if x.address == knx and
+                                 not x.isControl and not x.exported]
                         if len(items) == 0:
                             # seems like we're running w/o ETS project file so create a generic entry
                             name = line.split()[1:2][0]
@@ -279,7 +289,9 @@ def writeItemFiles():
                                 item.ignore = True  # "remove others"
                                 item.exported = True
 
-                            item = KNXItem.createGeneric(ohItem=items[0].ohItem)
+                            # Use 1st one
+                            hit = next(obj for obj in items if obj.ohItem is not None)
+                            item = KNXItem.createGeneric(ohItem=hit.ohItem)
 
                         else:
                             # exactly one item entry found
