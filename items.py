@@ -75,8 +75,8 @@ class OpenHABItem(Item):
         if '<' in ga:
             self.feedback = re.search(r'.*<(.*:)?([0-9]*/[0-9]*/[0-9]*).*', ga).group(2)
 
-        # align spaces around = and , 1st
-        ga = self.groupaddress_oh1.replace(" = ", "=").replace(" ,", ",").replace(", ", ",").strip()
+        # remove all spaces in group address
+        ga = self.groupaddress_oh1.strip()
 
         # extract option expire if applicable
         if 'expire' in ga:

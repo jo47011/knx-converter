@@ -6,8 +6,6 @@ The following issues may be improved one day:
   - As of now all items read from ETS which are not in any items file
   are handled as Switches.
   - Distinguish by type if a GA is assigned to e.g. a Dimmer and a Switch.
-* Remove spaces from group addresses, based on the forum spaces may
-  cause problems in knx2.
 * Maybe based on read/write flags in ETS create less control
   items, e.g. movement detecor is one way (read only)
 
