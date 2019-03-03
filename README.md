@@ -47,7 +47,7 @@ These can be used for copy & paste if you need to add items at a later stage.  A
 names:
 
 ```python
-# knx1 openhab item file(s)
+# knx1 openHAB item file(s)
 ITEMS_FILES = "../items/knx1/myhome.items , \
     ../items/knx1/heating.items, \
     ../items/knx1/window.items, \
@@ -64,7 +64,7 @@ ITEMS_UNUSED_FILE = "unused.items"
 ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
 ```
 
-You definitly need to adjust the following settings that the script can determine what are your actors and what are your
+You definitely need to adjust the following settings that the script can determine what are your actors and what are your
 controls.  This may be improved in future by extracting more information from the *knxproj* files.  See *TODOS.md*.
 
 ```python
@@ -84,7 +84,7 @@ it may mean that you need to adjust the above settings.
 > INFO: No Actor found for: 4/0/24   	using: generic	BWM_Aussen_Garage
 
 To find the names of your ETS components you can look into the files containing debug information about all your knx
-and openhab items after a 1st run of this script.
+and openHAB items after a 1st run of this script.
 
 ```python
 # files containing all information read

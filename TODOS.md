@@ -1,7 +1,5 @@
 The following issues may be improved one day:
 * Read datapoints from ets (dpt)
-* Support single quotes in item files,
-  as for now only double quotes are supported
 * Improve NS_URL = '{http://knx.org/xml/project/11}'
 * Determine correct item type based on *knxproj* files what are actors,
   controls, etc.  So we can improve:

@@ -64,7 +64,7 @@ class OpenHABItem(Item):
         # find knx address etc.
         self.groupaddress_oh1 = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', self.line).group(1)
         self.type, self.name = self.line.split()[:2]
-        ga = re.search(r'[ \t]*knx[ \t]*=[ \t]*"(.*)"', self.groupaddress_oh1).group(1)
+        ga = re.search(r'[ \t]*knx[ \t]*=[ \t]*["\'](.*)["\']', self.groupaddress_oh1).group(1)
         self.address = re.search(r'([0-9]*/[0-9]*/[0-9]*).*', ga).group(1)
 
         # datapoint
@@ -80,15 +80,15 @@ class OpenHABItem(Item):
 
         # extract option expire if applicable
         if 'expire' in ga:
-            self.expire = re.search(r'.*[ \t]*expire[ \t]*=[ \t]*("[\w,=]*")[,]?.*', ga).group(1)
+            self.expire = re.search(r'.*[ \t]*expire[ \t]*=[ \t]*(["\'][\w,=]*["\'])[,]?.*', ga).group(1)
 
         # extract option autoupdate if applicable
         if 'autoupdate' in ga:
-            self.autoupdate = re.search(r'.*[ \t]*autoupdate[ \t]*=[ \t]*("[\w]*").*', ga).group(1)
+            self.autoupdate = re.search(r'.*[ \t]*autoupdate[ \t]*=[ \t]*(["\'][\w]*["\']).*', ga).group(1)
 
         # assign OH2 group address
         if self.type == 'Dimmer':
-            values = re.sub(r'knx[ \t]*=|"', '', ga).split(',')
+            values = re.sub(r'knx[ \t]*=|["\']', '', ga).split(',')
             if len(values) >= 3:
                 s, i, p = map(str.strip, values[:3])
                 self.groupaddress_oh2 = f'switch = "{s}", position = "{p}", increaseDecrease = "{i}"'
@@ -96,7 +96,7 @@ class OpenHABItem(Item):
                 self.groupaddress_oh2 = f'switch = "{values[0]}"'
 
         elif self.type == 'Rollershutter':
-            u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|"', '', ga).split(',')[:3])
+            u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|["\']', '', ga).split(',')[:3])
             self.groupaddress_oh2 = f'upDown = "{u}", stopMove = "{s}", position = "{p}"'
 
         else:
