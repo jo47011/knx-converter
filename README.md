@@ -101,13 +101,31 @@ following variable to prevent the creation of the unused control items.  They wi
 ```python
 # If defined, only these controls will be added to the items and things file.
 # If undefined all possible controls will be created, this may be a good start
-# but may flood your system.
-WANTED_CONTROLS = "Switch_Szene_Garage_links, \
-    Switch_Szene_Garage_rechts , \
-    Licht_EG_Gaderobe, \
-    Switch_Beschattung_OG"
+# but may flood your system.  You may use regex to match.
+WANTED_CONTROLS = "Switch_Szene, \
+   Licht_EG_Gaderobe, \
+   Switch_Beschattung, \
+   Rolladen_.*_Switch, \
+   Licht_ALL"
 ```
 
+### NEW: 20190314
+
+*WANTED_CONTROLS* (see above) now support regular expressions.
+
+New autoupdate feature: if below variables are defined the *autoupdate="true"* or *false* is
+added to the item in the items file:
+
+```python
+# If defined, ``autoupdate="true"`` will be added to all matching items.
+# You may use regex to match.
+AUTOUPDATE_TRUE = "Alarm_, \
+   Rolladen_.*_Switch"
+
+# If defined, ``autoupdate="false"`` will be added to all matching items.
+# You may use regex to match.
+AUTOUPDATE_FALSE = "Licht_ALL"
+```
 
 If you have any issue feel free to contact me or open an issue in the repository.
 

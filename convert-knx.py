@@ -23,8 +23,6 @@ from os import path
 import config
 from items import KNXItem, OpenHABItem
 
-wantedControls = None
-
 
 def trace(func):
     '''Helper decorator function.
@@ -40,14 +38,6 @@ def trace(func):
 
         return original_result
     return wrapper
-
-
-def isWantedControl(item):
-    if wantedControls is None:
-        return True
-    if item.ohItem is None:
-        return False
-    return item.ohItem.name in wantedControls
 
 
 def readParts(type, root, part, name=''):
@@ -126,7 +116,7 @@ def createGenericControls():
     '''
     allControls = list(od.fromkeys(filter(lambda x: x.ohItem is not None
                                           and x.isControl
-                                          and isWantedControl(x), KNXItem.items())).keys())
+                                          and x.isWantedControl(), KNXItem.items())).keys())
     for item in allControls:
         entry = KNXItem.createGeneric(ohItem=item.ohItem, isControl=True)
         item.ignore = True
@@ -215,7 +205,7 @@ def writeThingFile(filter, filename, comment=''):
             # print OH Item
             control = unique = direction = ''
             if item.isControl:
-                if not isWantedControl(item):
+                if not item.isWantedControl():
                     continue
 
                 control = "-control"
@@ -302,7 +292,7 @@ def writeItemFiles():
 
                         # add generic control item if aplicable
                         items = [x for x in KNXItem.items() if x.getID() == item.getID()
-                                 and x.isGeneric and x.isControl and isWantedControl(item)]
+                                 and x.isGeneric and x.isControl and item.isWantedControl()]
                         if len(items) > 1:
                             # should not happen there should be only one generic item
                             print(f"ERROR: Multiple generic controls w/ Group Address {knx} found.")
@@ -366,12 +356,6 @@ def writeFiles():
 
 # here we go...
 if __name__ == '__main__':
-
-    # read wanted controls if defined
-    try:
-        wantedControls = config.WANTED_CONTROLS.replace(" ", "").split(",")
-    except (NameError, AttributeError) as excep:
-        pass
 
     # read ets & openhab files
     readETSFile()

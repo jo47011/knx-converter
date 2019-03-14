@@ -47,11 +47,23 @@ CONTROL_SUFFIX = '_Control'
 # If undefined all possible controls will be created, this may be a good start
 # but may flood your system.
 
-# WANTED_CONTROLS = "Switch_Szene_Garage_links, \
-#     Switch_Szene_Garage_rechts , \
+# If defined, only these controls will be added to the items and things file.
+# If undefined all possible controls will be created, this may be a good start
+# but may flood your system.  You may use regex to match.
+# WANTED_CONTROLS = "Switch_Szene, \
 #     Licht_EG_Gaderobe, \
-#     Switch_Beschattung_OG, \
+#     Switch_Beschattung, \
+#     Rolladen_.*_Switch, \
 #     Licht_ALL"
+
+# If defined, ``autoupdate="true"`` will be added to all matching items.
+# You may use regex to match.
+# AUTOUPDATE_TRUE = "Alarm_"
+
+# If defined, ``autoupdate="false"`` will be added to all matching items.
+# You may use regex to match.
+# AUTOUPDATE_FALSE = "Licht_ALL"
+
 
 # values in <...> will be replaced. So do not change <...> values.
 CHANNEL = ' channel="knx:device:bridge:<generic>:<name>" '

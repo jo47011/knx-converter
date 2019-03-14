@@ -29,11 +29,14 @@ class Item:
     def remove(cls, item):
         cls.items().remove(item)
 
+
 @dataclass(order=True)
 class OpenHABItem(Item):
     '''Helper class for storing relevant data per OH Item
     '''
     allItems = []
+    autoupdateTrue = None
+    autoupdateFalse = None
 
     line: str = ''
     type: str = None
@@ -59,8 +62,34 @@ class OpenHABItem(Item):
             f"    groupaddress_oh2:\t{self.groupaddress_oh2}\n"
         )
 
-    # extract knx address and OH" group address config
+
+    def myinit(self):
+        '''Read some config variables, if defined.
+        '''
+        if not OpenHABItem.allItems:
+            try:
+                OpenHABItem.autoupdateTrue = config.AUTOUPDATE_TRUE.replace(" ", "").split(",")
+            except (NameError, AttributeError) as excep:
+                pass
+
+            try:
+                OpenHABItem.autoupdateFalse = config.AUTOUPDATE_FALSE.replace(" ", "").split(",")
+            except (NameError, AttributeError) as excep:
+                pass
+
+
     def __post_init__(self):
+        self.myinit()
+        self.parseKNXline()
+        OpenHABItem.add(self)
+        self.calculateSortIndex()
+        self.assignKNXdevices()
+
+
+    def parseKNXline(self):
+        '''Extract knx address and OH" group address config etc.
+        '''
+
         # find knx address etc.
         self.groupaddress_oh1 = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', self.line).group(1)
         self.type, self.name = self.line.split()[:2]
@@ -85,6 +114,10 @@ class OpenHABItem(Item):
         # extract option autoupdate if applicable
         if 'autoupdate' in ga:
             self.autoupdate = re.search(r'.*[ \t]*autoupdate[ \t]*=[ \t]*(["\'][\w]*["\']).*', ga).group(1)
+        elif self.isAutoupdateTrue():
+            self.autoupdate = '"true"'
+        elif self.isAutoupdateFalse():
+            self.autoupdate = '"false"'
 
         # assign OH2 group address
         if self.type == 'Dimmer':
@@ -103,21 +136,17 @@ class OpenHABItem(Item):
             # default is ga
             self.groupaddress_oh2 = ga.replace("knx", "ga")
 
-        # assign sortable number
+
+    def calculateSortIndex(self):
+        '''Assign sortable number
+        '''
         self.sort_index = 0
         for idx, f in enumerate(self.address.split('/')):
             self.sort_index += int(f) * 10**(3 - idx)
 
-        # add OpenHAB item
-        search = list(filter(lambda x: self == x, self.allItems))
-        if len(search) == 0:
-            self.allItems.append(self)
-        else:
-            print("ERROR: The following address is assigned twice in your item files:")
-            print(search[0])
-            sys.exit(1)
-
-        # assign corresponding KNX devices
+    def assignKNXdevices(self):
+        '''Assign corresponding KNX devices.
+        '''
         if len(KNXItem.items()) > 0:
             devices = [x for x in KNXItem.items() if x.address == self.address]
 
@@ -195,12 +224,45 @@ class OpenHABItem(Item):
     def __eq__(self, other):
         return self.address == other.address and self.name == other.name
 
+    def isAutoupdateTrue(self):
+        if self.autoupdateTrue is None:
+            return False
+        for r in self.autoupdateTrue:
+            if re.match(r, self.name):
+                return True
+
+        return False
+
+
+    def isAutoupdateFalse(self):
+        if self.autoupdateFalse is None:
+            return False
+        for r in self.autoupdateFalse:
+            if re.match(r, self.name):
+                return True
+
+        return False
+
+    @classmethod
+    def add(cls, self):
+        '''Add item to list of all items.
+        '''
+        search = list(filter(lambda x: self == x, cls.allItems))
+        if len(search) == 0:
+            cls.allItems.append(self)
+        else:
+            print("ERROR: The following address is assigned twice in your item files:")
+            print(duplicate)
+            print(self)
+            sys.exit(1)
+
 
 @dataclass(order=True)
 class KNXItem(Item):
     '''Helper class for storing relevant data per GA
     '''
     allItems = []
+    wantedControls = None
 
     device_address: str = config.DEVICE_GENERIC
     refid: str = ""
@@ -226,11 +288,25 @@ class KNXItem(Item):
             f"    isControl     :\t{self.isControl}\n"
         )
 
-    def __post_init__(self):
-        if len(list(filter(lambda x: x == self, self.allItems))) == 0:
-            self.allItems.append(self)
+    def myinit(self):
+        '''Read some config variables, if defined.
+        '''
+        if not KNXItem.allItems:
+            try:
+                KNXItem.wantedControls = config.WANTED_CONTROLS.replace(" ", "").split(",")
+            except (NameError, AttributeError) as excep:
+                pass
 
-        # assign sortable number by device_address and knx address
+
+
+    def __post_init__(self):
+        self.myinit()
+        KNXItem.add(self)
+        self.calculateSortIndex()
+
+    def calculateSortIndex(self):
+        '''Assign sortable number by device_address and knx address
+        '''
         self.sort_index = 0
         for idx, f in enumerate(self.address.split('/')):
             self.sort_index += int(f) * 10**(3 - idx)
@@ -241,6 +317,12 @@ class KNXItem(Item):
 
     def __eq__(self, other):
         return self.getID() == other.getID() and self.isControl == other.isControl
+
+    def errorNotUnique(self, duplicate):
+        print("ERROR: The following address exits twice in your ETS file:")
+        print(duplicate)
+        print(self)
+        sys.exit(1)
 
     def __hash__(self):
         return hash(self.getID() + "1" if self.isControl else "0")
@@ -264,6 +346,16 @@ class KNXItem(Item):
 
     def isGeneric(self):
         return self.device_address == config.DEVICE_GENERIC
+
+    def isWantedControl(self):
+        if KNXItem.wantedControls is None or self.ohItem is None:
+            return False
+        for r in KNXItem.wantedControls:
+            if re.match(r, self.ohItem.name):
+                return True
+
+        return False
+
 
     def getItemRepresentation(self, line=None):
         if self.ohItem is None:
@@ -303,3 +395,14 @@ class KNXItem(Item):
                        address=ohItem.address,
                        ohItem=ohItem,
                        isControl=isControl)
+
+    @classmethod
+    def add(cls, self):
+        '''Add item to list of all items.
+        '''
+        search = list(filter(lambda x: self == x, cls.allItems))
+        if len(search) == 0:
+            cls.allItems.append(self)
+        else:
+            # nop, we accept duplicates in ETS file
+            pass
