@@ -107,6 +107,9 @@ class OpenHABItem(Item):
         # remove all spaces in group address
         ga = self.groupaddress_oh1.replace(" ","")
 
+        # knx
+        knx = re.search(r'(knx[ \t]*="[0-9/,+-<>]*").*', ga).group(1)
+
         # extract option expire if applicable
         if 'expire' in ga:
             self.expire = re.search(r'.*[ \t]*expire[ \t]*=[ \t]*(["\'][\w,=]*["\'])[,]?.*', ga).group(1)
@@ -134,7 +137,7 @@ class OpenHABItem(Item):
 
         else:
             # default is ga
-            self.groupaddress_oh2 = ga.replace("knx", "ga")
+            self.groupaddress_oh2 = knx.replace("knx", "ga")
 
 
     def calculateSortIndex(self):

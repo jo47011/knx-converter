@@ -1,12 +1,12 @@
 # Adjust this file to your the settings
 
-# knx1 openhab items file(s)
+# knx1 openhab item file(s)
 ITEMS_FILES = "../items/knx1/myhome.items , \
     ../items/knx1/heating.items, \
     ../items/knx1/window.items, \
     ../items/knx1/xbmc.items"
 
-# converted items files will be created in this directory
+# converted item files will be created in this directory
 ITEM_RESULT_DIR = "../items/"
 
 # out file names
@@ -28,10 +28,10 @@ PROJECTFILE = "./knxproj/P-02A7/0.xml"
 # If unsure: run the script and look into the DEBUG_KNX file
 
 # These are the primary addresses which will be used for read/write
-ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD,"
+ACTORS = "AKS, AKD, JAL, M-0051_H-hp, QUAD, 2000-1-O000A_P-2174, "
 
 # These will be added as -control items
-CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, LED,"
+CONTROLS = "TSM, -BE, ZN1IO, ZN1VI, 2000-1-O000A_P-1118, O000A_P-3180, 2000-0_P-2343, LED,"
 
 # These will ignored, uncomment to use
 # IGNORE_DEVICES = "LED,"
@@ -43,36 +43,31 @@ UNUSED_TYPE = 'Switch'
 # Suffix for generic control items
 CONTROL_SUFFIX = '_Control'
 
-# If defined, only these controls will be added to the item and things file.
-# If undefined all possible controls will be created, this may be a good start
-# but may flood your system.
-
 # If defined, only these controls will be added to the items and things file.
 # If undefined all possible controls will be created, this may be a good start
 # but may flood your system.  You may use regex to match.
-# WANTED_CONTROLS = "Switch_Szene, \
-#     Licht_EG_Gaderobe, \
-#     Switch_Beschattung, \
-#     Rolladen_.*_Switch, \
-#     Licht_ALL"
+WANTED_CONTROLS = "Switch_Szene, \
+    Licht_EG_Gaderobe, \
+    Switch_Beschattung, \
+    Rolladen_.*_Switch, \
+    BWM_, \
+    Licht_ALL"
 
 # If defined, ``autoupdate="true"`` will be added to all matching items.
 # You may use regex to match.
-# AUTOUPDATE_TRUE = "Alarm_"
+AUTOUPDATE_TRUE = "Alarm_, Licht_ALL, BWM_"
 
 # If defined, ``autoupdate="false"`` will be added to all matching items.
 # You may use regex to match.
 # AUTOUPDATE_FALSE = "Licht_ALL"
 
-
 # values in <...> will be replaced. So do not change <...> values.
 CHANNEL = ' channel="knx:device:bridge:<generic>:<name>" '
 
-# IMPORTANT: adjust your IP (KNX and local) below
 THING_HEADER = '''Bridge knx:ip:bridge [
-    ipAddress="192.168.x.xxx",
+    ipAddress="192.168.2.23",
     portNumber=3671,
-    localIp="192.168.x.xxx",
+    localIp="192.168.2.199",
     type="TUNNEL",
     readingPause=50,
     responseTimeout=10,
@@ -84,13 +79,14 @@ THING_HEADER = '''Bridge knx:ip:bridge [
 # Generic device name
 DEVICE_GENERIC = "generic"
 
+
 DEVICE = '''
     Thing device <generic> [
         // device ID: <device_id>
         // <building>
         address="<address>",
         fetch=false,
-        pingInterval=600,
+        pingInterval=60000,
         readInterval=0
     ] {'''
 
@@ -100,7 +96,6 @@ DEVICE_EMPTY = '''
 
 CHANNELS = (
     "Switch",
-
     "Rollershutter",
     "Contact",
     "Number",
