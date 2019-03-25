@@ -180,6 +180,13 @@ def readOHFiles():
 
 
 def writeThingFile(filter, filename, comment=''):
+    # create path to outfile if it doesn't existant
+    filepath = os.path.split(filename)[0]
+    print(filename, filepath)
+    if not path.exists(filepath) and filepath:
+        print("mkdir:" + filepath)
+        os.makedirs(filepath)
+
     with open(filename, 'w', encoding="utf8") as thingfile:
         print(comment, file=thingfile)
         print(config.THING_HEADER, file=thingfile)
@@ -234,6 +241,10 @@ def writeItemFiles():
     except (NameError, AttributeError) as excep:
         config.ITEMS_FILES = None
         print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
+
+    # create path to outfiles if it doesn't existant
+    if not path.exists(config.ITEM_RESULT_DIR) and config.ITEM_RESULT_DIR:
+        os.makedirs(config.ITEM_RESULT_DIR)
 
     if config.ITEMS_FILES is not None:
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):

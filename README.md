@@ -127,6 +127,12 @@ AUTOUPDATE_TRUE = "Alarm_, \
 AUTOUPDATE_FALSE = "Licht_ALL"
 ```
 
+### NEW:  20190325
+
+Now creating configured output directories if non existant.
+
+--------
+
 If you have any issue feel free to contact me or open an issue in the repository.
 
 Have fun...
