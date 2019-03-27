@@ -144,10 +144,8 @@ ITEMS_FILES = r"../items/knx1/myhome.items , \
     ../items/knx1/xbmc.items"
 ```
 
-Now creating configured output directories if non existent.
-
 --------
 
 If you have any issue feel free to contact me or open an issue in the repository.
 
-Have fun...
+Have funambulate...
