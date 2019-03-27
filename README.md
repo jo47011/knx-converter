@@ -8,13 +8,13 @@ binding.  It converts existing knx1 item files and generates a knx.thing file.  
 and items.  Furthermore it will most likely not work out of the box for everybody but may be a good start for whoever
 wants to automate that process.
 
-It has been tested with an **ETS 4** project file and runs on a Mac thus it should work on any Unix system.  Not sure about
-Windows.
+It has been tested with an **ETS 4** and **ETS 5** project file and runs on a Mac thus it should work
+on any Unix system.  Also passed a rough 1st test on Windows 7.
+
 
 ## Prerequisites
 
-- You do need python3.
-  I'm using Python 3.7.1.
+- You do need python3.6 or above.  I'm using Python 3.7.1.
 
 ## Installation
 
@@ -127,9 +127,24 @@ AUTOUPDATE_TRUE = "Alarm_, \
 AUTOUPDATE_FALSE = "Licht_ALL"
 ```
 
+
 ### NEW:  20190325
 
-Now creating configured output directories if non existant.
+Now creating configured output directories if non existent.
+
+### NEW:  20190327
+
+Tested and adjusted for Windows 7.  Make sure you add an **r** in front of your config paths, especially if it is a
+multi-line string concatenated with a backslash. e.g.:
+
+```python
+ITEMS_FILES = r"../items/knx1/myhome.items , \
+    ../items/knx1/heating.items, \
+    ../items/knx1/window.items, \
+    ../items/knx1/xbmc.items"
+```
+
+Now creating configured output directories if non existent.
 
 --------
 

@@ -17,27 +17,10 @@ from collections import namedtuple
 import xml.etree.ElementTree as ET
 from collections import OrderedDict as od
 import re
-import subprocess
 from os import path
 
 import config
 from items import KNXItem, OpenHABItem
-
-
-def trace(func):
-    '''Helper decorator function.
-    Add @trace before your function for debug output'''
-    def wrapper(*args, **kwargs):
-        print(f'TRACE: calling {func.__name__}() '
-              f'with {args}, {kwargs}')
-
-        original_result = func(*args, **kwargs)
-
-        print(f'TRACE: {func.__name__}() '
-              f'returned {original_result!r}')
-
-        return original_result
-    return wrapper
 
 
 def readParts(type, root, part, name=''):
@@ -170,6 +153,7 @@ def readOHFiles():
 
     if config.ITEMS_FILES is not None:
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):
+            myfile = myfile.strip('\\\r\n').strip()
             print(f"reading {myfile}")
             with open(myfile, 'r') as infile:
                 for line in infile.readlines():
@@ -250,6 +234,7 @@ def writeItemFiles():
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):
 
             outfilename = os.path.join(config.ITEM_RESULT_DIR, path.basename(myfile))
+            myfile = myfile.strip('\\\r\n').strip()
             with open(myfile, 'r') as infile, \
                  open(outfilename, 'w', encoding="utf8") as outfile:
 
@@ -320,10 +305,6 @@ def writeFiles():
     '''Link OpenHABitems and KNXItems and writes
     ITEMS_FILES, THINGS_FILE, ITEMS_UNUSED_FILE, THINGS_UNUSED_FILE files in knx2 format.
     '''
-
-    # create result dir if non existant
-    if not path.exists(config.ITEM_RESULT_DIR):
-        subprocess.call(["mkdir", '-p', config.ITEM_RESULT_DIR])
 
     writeItemFiles()
 
