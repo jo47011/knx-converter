@@ -1,20 +1,24 @@
-# Adjust this file to your the settings
+# Adjust this file to your settings
+
+# file encodings
+IN_ENCODING = r"utf8"
+OUT_ENCODING = r"utf8"
 
 # knx1 openhab items file(s)
-ITEMS_FILES = r"../items/knx1/myhome.items , \
+ITEMS_FILES = "../items/knx1/myhome.items , \
     ../items/knx1/heating.items, \
     ../items/knx1/window.items, \
     ../items/knx1/xbmc.items"
 
 # converted items files will be created in this directory
-ITEM_RESULT_DIR = r"../items/"
+ITEM_RESULT_DIR = "../items/"
 
 # out file names
-THINGS_FILE = r"../things/knx.things"
+THINGS_FILE = "../things/knx.things"
 
-THINGS_UNUSED_FILE = r"unused.things"
-ITEMS_UNUSED_FILE = r"unused.items"
-ITEMS_UNUSED_CONTROLS_FILE =r"unused-control.items"
+THINGS_UNUSED_FILE = "unused.things"
+ITEMS_UNUSED_FILE = "unused.items"
+ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
 
 # files containing all information read
 DEBUG_KNX = "knx.txt"
@@ -22,7 +26,7 @@ DEBUG_OH = "oh.txt"
 
 # knxproj file (optional), unzip your knxproj file
 # comment out this lines if you do not have/want to read ETS config
-PROJECTFILE = r"./knxproj/P-02A7/0.xml"
+PROJECTFILE = "./knxproj/P-02A7/0.xml"
 
 ### specify device types by vendor name (must be part of the *ProductRefId*)
 # If unsure: run the script and look into the DEBUG_KNX file

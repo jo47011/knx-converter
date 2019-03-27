@@ -144,6 +144,15 @@ ITEMS_FILES = r"../items/knx1/myhome.items , \
     ../items/knx1/xbmc.items"
 ```
 
+Added encoding option, fixes German Umlaut problems and others.  Add this to your config file if it is
+not there yet:
+
+```python
+# file encodings
+IN_ENCODING = r"utf8"
+OUT_ENCODING = r"utf8"
+```
+
 --------
 
 If you have any issue feel free to contact me or open an issue in the repository.

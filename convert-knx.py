@@ -155,7 +155,7 @@ def readOHFiles():
         for myfile in map(str.strip, config.ITEMS_FILES.split(',')):
             myfile = myfile.strip('\\\r\n').strip()
             print(f"reading {myfile}")
-            with open(myfile, 'r') as infile:
+            with open(myfile, 'r', encoding=config.IN_ENCODING) as infile:
                 for line in infile.readlines():
                     # knx items only
                     if line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', line):
@@ -171,7 +171,7 @@ def writeThingFile(filter, filename, comment=''):
         print("mkdir:" + filepath)
         os.makedirs(filepath)
 
-    with open(filename, 'w', encoding="utf8") as thingfile:
+    with open(filename, 'w', encoding=config.OUT_ENCODING) as thingfile:
         print(comment, file=thingfile)
         print(config.THING_HEADER, file=thingfile)
 
@@ -235,8 +235,8 @@ def writeItemFiles():
 
             outfilename = os.path.join(config.ITEM_RESULT_DIR, path.basename(myfile))
             myfile = myfile.strip('\\\r\n').strip()
-            with open(myfile, 'r') as infile, \
-                 open(outfilename, 'w', encoding="utf8") as outfile:
+            with open(myfile, 'r', encoding=config.IN_ENCODING) as infile, \
+                 open(outfilename, 'w', encoding=config.OUT_ENCODING) as outfile:
 
                 # read original item file and replace knx2 values
                 for line in infile.readlines():
@@ -311,8 +311,8 @@ def writeFiles():
     # print left over KNXItems to ITEMS_UNUSED_FILE
     devc = None
     devu = None
-    with open(config.ITEMS_UNUSED_FILE, 'w', encoding="utf8") as unusedfile, \
-         open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding="utf8") as controlfile:
+    with open(config.ITEMS_UNUSED_FILE, 'w', encoding=config.OUT_ENCODING) as unusedfile, \
+         open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding=config.OUT_ENCODING) as controlfile:
 
         print('// These control switches should be added to get event from wall switches', file=controlfile)
 
@@ -345,9 +345,17 @@ def writeFiles():
     writeThingFile(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()), config.THINGS_UNUSED_FILE,
                    '// These things are available in your ETS but are not configured/used in any of your item files\n')
 
+def checkPythonVersion():
+    if sys.version_info[0] < 3:
+        raise Exception("Must be using Python 3")
+    if sys.version_info[1] < 6:
+        raise Exception("Must be using Python 3.6")
 
 # here we go...
 if __name__ == '__main__':
+
+    # check minimum ptyhon version 1st
+    checkPythonVersion()
 
     # read ets & openhab files
     readETSFile()
