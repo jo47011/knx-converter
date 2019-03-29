@@ -14,7 +14,7 @@ on any Unix system.  Also passed a rough 1st test on Windows 7.
 
 ## Prerequisites
 
-- You do need python3.6 or above.  I'm using Python 3.7.1.
+- You do need python3.7 or above.
 
 ## Installation
 
