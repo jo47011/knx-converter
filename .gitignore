@@ -9,3 +9,4 @@ config.py-git
 Makefile
 CVS
 info.txt
+.cvsignore
