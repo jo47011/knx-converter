@@ -93,10 +93,16 @@ class OpenHABItem(Item):
         '''
 
         # find knx address etc.
-        self.groupaddress_oh1 = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', self.line).group(1)
+        self.groupaddress_oh1 = re.search(r'{.*(knx[ \t]*=.*)[ \t]*}', self.line).group(1)
         self.type, self.name = self.line.split()[:2]
         ga = re.search(r'[ \t]*knx[ \t]*=[ \t]*["\'](.*)["\']', self.groupaddress_oh1).group(1)
         self.address = re.search(r'([0-9]*/[0-9]*/[0-9]*).*', ga).group(1)
+
+        # print warning on old style alexa, yet not supported
+        if re.search('alexa', self.line, re.IGNORECASE):
+            print('Warning: Alexa only supported with this format: e.g. ["Lighting"].  As of now removed.')
+            print(self.line)
+
 
         # datapoint
         if ':' in ga:
@@ -134,8 +140,12 @@ class OpenHABItem(Item):
                 self.groupaddress_oh2 = f'switch = "{values[0]}"'
 
         elif self.type == 'Rollershutter':
-            u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|["\']', '', ga).split(',')[:3])
-            self.groupaddress_oh2 = f'upDown = "{u}", stopMove = "{s}", position = "{p}"'
+            try:
+                u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|["\']', '', ga).split(',')[:3])
+                self.groupaddress_oh2 = f'upDown = "{u}", stopMove = "{s}", position = "{p}"'
+            except (ValueError) as excep:
+                print("ERROR: The following Rollershutter should have 3 KNX entries for: upDown, stopMove, position")
+                print(self.line)
 
         else:
             # default is ga

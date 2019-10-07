@@ -257,7 +257,7 @@ def writeItemFiles():
                         print(line, file=outfile, end='')
                     else:
                         # knx item
-                        temp = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', line).group(1)
+                        temp = re.search(r'{.*(knx[ \t]*=.*)[ \t]*}', line).group(1)
                         knx = re.search(r'([0-9]*/[0-9]*/[0-9]*).*', temp).group(1)
 
                         if knx is None:
