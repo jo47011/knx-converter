@@ -12,16 +12,21 @@ import sys
 import re
 from dataclasses import dataclass, field
 import config
+from abc import ABCMeta, abstractmethod
 
 @dataclass(order=True)
-class Item:
+class Item(metaclass=ABCMeta):
     '''Helper super-class for storing common data per Item
     '''
     sort_index: int = field(init=False, repr=False)
     name: str = ''
     address: str = ''
 
-    allItems = []
+    # allItems = [] must be declared in subclass
+    @property
+    @abstractmethod
+    def allItems(self):
+        pass
 
     @classmethod
     def items(cls):
