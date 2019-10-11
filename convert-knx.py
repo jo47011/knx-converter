@@ -24,6 +24,8 @@ from items import KNXItem, OpenHABItem
 
 
 def readParts(type, root, part, name=''):
+    '''Recursively reads all parts from ETS root.
+    '''
     # print(f"reading {part.attrib['Name']}")
     name = (name + " " + part.attrib['Name']).lstrip()
 
@@ -37,6 +39,8 @@ def readParts(type, root, part, name=''):
 
 
 def readDevice(root, ref, building):
+    ''' Reads top level ref device and all containing group addresses from ETS root.
+    '''
     device = root.findall(getNsURL(root) + config.FIND_DEVICE + "[@Id='" + ref + "']")[0]
 
     for comobj in device.findall(getNsURL(root) + config.FIND_COMREF):
@@ -66,6 +70,7 @@ def readDevice(root, ref, building):
 
 
 def ga2str(ga):
+    # Converts ETS stlye group address to openhab format: 0/0/0.
     return "%d/%d/%d" % ((ga >> 11) & 0xf, (ga >> 8) & 0x7, ga & 0xff)
 
 
@@ -106,6 +111,8 @@ def createGenericControls():
 
 
 def getNsURL(root):
+    '''Checks for KNX tag in root node.  Script is terminated if not found.
+    '''
     if not root.tag.endswith('KNX'):
         print(f'ERROR: no KNX root found in: {root}')
         sys.exit(1)
@@ -158,13 +165,15 @@ def readOHFiles():
             print(f"reading {myfile}")
             with open(myfile, 'r', encoding=config.IN_ENCODING) as infile:
                 for line in infile.readlines():
-                    # knx items only
-                    if line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', line):
+                    # knx items only, remove trailing comments //
+                    if line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', re.sub(r'//.*', '', line)):
                         # remember values for things file
                         item = OpenHABItem(line=line)
 
 
 def writeThingFile(filter, filename, comment=''):
+    '''Write openhab thing file.  See config.THING*
+    '''
     # create path to outfile if it doesn't existant
     filepath = os.path.split(filename)[0]
     print(filename, filepath)
@@ -221,6 +230,8 @@ def writeThingFile(filter, filename, comment=''):
 
 
 def writeItemFiles():
+    '''Write openhab item files.  See config.ITEMS_FILES.
+    '''
     try:
         config.ITEMS_FILES
     except (NameError, AttributeError) as excep:
@@ -242,12 +253,12 @@ def writeItemFiles():
                 # read original item file and replace knx2 values
                 for line in infile.readlines():
 
-                    if not (line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', line)):
+                    if not (line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', re.sub(r'//.*', '', line))):
                         # non knx items and comments
                         print(line, file=outfile, end='')
                     else:
                         # knx item
-                        temp = re.search(r'{[ \t]*(knx[ \t]*=.*)[ \t]*}', line).group(1)
+                        temp = re.search(r'{.*(knx[ \t]*=.*)[ \t]*}', line).group(1)
                         knx = re.search(r'([0-9]*/[0-9]*/[0-9]*).*', temp).group(1)
 
                         if knx is None:
@@ -346,11 +357,12 @@ def writeFiles():
     writeThingFile(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()), config.THINGS_UNUSED_FILE,
                    '// These things are available in your ETS but are not configured/used in any of your item files\n')
 
+
 def checkPythonVersion():
-    if sys.version_info[0] < 3:
-        raise Exception("Must be using Python 3")
-    if sys.version_info[1] < 6:
-        raise Exception("Must be using Python 3.6")
+    # checks for minimum python version 3.7
+    if sys.version_info[0] < 3 or sys.version_info[1] < 7:
+        raise Exception("Must be using Python 3.7")
+
 
 # here we go...
 if __name__ == '__main__':

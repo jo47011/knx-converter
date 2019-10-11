@@ -9,3 +9,6 @@ config.py-git
 Makefile
 CVS
 info.txt
+.cvsignore
+result
+.DS_Store
