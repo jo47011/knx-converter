@@ -117,29 +117,30 @@ def readETSFile():
     '''Reads the ETS Project file if defined.
     '''
     try:
-        config.PROJECTFILE
+        config.PROJECTFILES
     except (NameError, AttributeError) as excep:
-        config.PROJECTFILE = None
+        config.PROJECTFILES = None
         print('PROJECTFILE is not defined (see config.py), so we proceed w/o ETS input.')
 
-    if config.PROJECTFILE is not None:
-        project = ET.parse(config.PROJECTFILE)
-        root = project.getroot()
-        buildings = root.find(getNsURL(root) + config.FIND_BUILDINGS)
-        print(f"reading {config.PROJECTFILE}")
+    if config.PROJECTFILES is not None:
+        for projectfile in config.PROJECTFILES.split():
+            project = ET.parse(projectfile)
+            root = project.getroot()
+            buildings = root.find(getNsURL(root) + config.FIND_BUILDINGS)
+            print(f"reading {projectfile}")
 
-        if buildings is None:
-            print("Buildings not found")
-        else:
-            for part in buildings:
-                readParts(config.FIND_BUILDINGPART, root, part)
+            if buildings is None:
+                print("Buildings not found")
+            else:
+                for part in buildings:
+                    readParts(config.FIND_BUILDINGPART, root, part)
 
-        trades = root.find(getNsURL(root) + config.FIND_TRADES)
+            trades = root.find(getNsURL(root) + config.FIND_TRADES)
 
-        if trades is not None:
-            for part in trades:
-                # print(part)
-                readParts(config.FIND_TRADEPART, root, part)
+            if trades is not None:
+                for part in trades:
+                    # print(part)
+                    readParts(config.FIND_TRADEPART, root, part)
 
 
 def readOHFiles():

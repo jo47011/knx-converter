@@ -24,9 +24,10 @@ ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
 DEBUG_KNX = "knx.txt"
 DEBUG_OH = "oh.txt"
 
-# knxproj file (optional), unzip your knxproj file
+# knxproj files (optional), unzip your knxproj file
 # comment out this lines if you do not have/want to read ETS config
-PROJECTFILE = "./knxproj/P-02A7/0.xml"
+# multiple files can be read, separated by spaces
+PROJECTFILES = "./knxproj/P-02A7/0.xml"
 
 ### specify device types by vendor name (must be part of the *ProductRefId*)
 # If unsure: run the script and look into the DEBUG_KNX file

@@ -255,8 +255,9 @@ class OpenHABItem(Item):
             cls.allItems.append(self)
         else:
             print("ERROR: The following address is assigned twice in your item files:")
-            print(duplicate)
+            print(search)
             print(self)
+            print(cls.allItems)
             sys.exit(1)
 
 
