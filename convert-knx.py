@@ -18,8 +18,8 @@ import xml.etree.ElementTree as ET
 from collections import OrderedDict as od
 import re
 from os import path
-from items import KNXItem, OpenHABItem
 
+from items import KNXItem, OpenHABItem
 from myargs import config
 
 
