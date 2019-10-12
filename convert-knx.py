@@ -18,9 +18,9 @@ import xml.etree.ElementTree as ET
 from collections import OrderedDict as od
 import re
 from os import path
-
-import config
 from items import KNXItem, OpenHABItem
+
+from myargs import config
 
 
 def readParts(type, root, part, name=''):

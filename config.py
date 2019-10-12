@@ -10,15 +10,15 @@ ITEMS_FILES = "../items/knx1/myhome.items , \
     ../items/knx1/window.items, \
     ../items/knx1/xbmc.items"
 
-# converted items files will be created in this directory
-ITEM_RESULT_DIR = "../items/"
+# converted item files will be created in this directory
+ITEM_RESULT_DIR = r"./result/items/"
 
 # out file names
-THINGS_FILE = "../things/knx.things"
+THINGS_FILE = r"./result/things/knx.things"
 
 THINGS_UNUSED_FILE = "unused.things"
 ITEMS_UNUSED_FILE = "unused.items"
-ITEMS_UNUSED_CONTROLS_FILE ="unused-control.items"
+ITEMS_UNUSED_CONTROLS_FILE = "unused-control.items"
 
 # files containing all information read
 DEBUG_KNX = "knx.txt"
@@ -29,7 +29,7 @@ DEBUG_OH = "oh.txt"
 # multiple files can be read, separated by spaces
 PROJECTFILES = "./knxproj/P-02A7/0.xml"
 
-### specify device types by vendor name (must be part of the *ProductRefId*)
+# ## specify device types by vendor name (must be part of the *ProductRefId*)
 # If unsure: run the script and look into the DEBUG_KNX file
 
 # These are the primary addresses which will be used for read/write

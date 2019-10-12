@@ -11,8 +11,12 @@ Disclaimer:
 import sys
 import re
 from dataclasses import dataclass, field
-import config
 from abc import ABCMeta, abstractmethod
+from importlib import import_module
+from argparse import ArgumentParser
+
+from myargs import config
+
 
 @dataclass(order=True)
 class Item(metaclass=ABCMeta):
@@ -69,7 +73,6 @@ class OpenHABItem(Item):
             f"    groupaddress_oh2:\t{self.groupaddress_oh2}\n"
         )
 
-
     def myinit(self):
         '''Read some config variables, if defined.
         '''
@@ -84,14 +87,12 @@ class OpenHABItem(Item):
             except (NameError, AttributeError) as excep:
                 pass
 
-
     def __post_init__(self):
         self.myinit()
         self.parseKNXline()
         OpenHABItem.add(self)
         self.calculateSortIndex()
         self.assignKNXdevices()
-
 
     def parseKNXline(self):
         '''Extract knx address and OH" group address config etc.
@@ -108,7 +109,6 @@ class OpenHABItem(Item):
             print('Warning: Alexa only supported with this format: e.g. ["Lighting"].  As of now removed.')
             print(self.line)
 
-
         # datapoint
         if ':' in ga:
             self.dpt = re.search(r'[<>]?(.*):.*', ga).group(1)
@@ -118,7 +118,7 @@ class OpenHABItem(Item):
             self.feedback = re.search(r'.*<(.*:)?([0-9]*/[0-9]*/[0-9]*).*', ga).group(2)
 
         # remove all spaces in group address
-        ga = self.groupaddress_oh1.replace(" ","")
+        ga = self.groupaddress_oh1.replace(" ", "")
 
         # knx
         knx = re.search(r'(knx[ \t]*="[0-9/,+-<>]*").*', ga).group(1)
@@ -155,7 +155,6 @@ class OpenHABItem(Item):
         else:
             # default is ga
             self.groupaddress_oh2 = knx.replace("knx", "ga")
-
 
     def calculateSortIndex(self):
         '''Assign sortable number
@@ -253,7 +252,6 @@ class OpenHABItem(Item):
 
         return False
 
-
     def isAutoupdateFalse(self):
         if self.autoupdateFalse is None:
             return False
@@ -318,8 +316,6 @@ class KNXItem(Item):
             except (NameError, AttributeError) as excep:
                 pass
 
-
-
     def __post_init__(self):
         self.myinit()
         KNXItem.add(self)
@@ -376,7 +372,6 @@ class KNXItem(Item):
                 return True
 
         return False
-
 
     def getItemRepresentation(self, line=None):
         if self.ohItem is None:

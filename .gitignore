@@ -4,11 +4,11 @@ unused*
 knx.txt
 oh.txt
 __pycache__
-config.py-mine
-config.py-git
+config-mine.py
 Makefile
 CVS
 info.txt
 .cvsignore
 result
 .DS_Store
+result

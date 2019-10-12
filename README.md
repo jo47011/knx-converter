@@ -2,14 +2,14 @@
 
 This is a repository of a experimental script to help moving from openHAB 1.x knx1 binding to the new openHAB 2.x knx
 binding.  It converts existing knx1 item files and generates a knx.thing file.  Optionally it can also read the
-`knxproj` file.
+`knxproj` file(s).
 
 **Note:** This script only works if your are using config files.  It will not work if you use the UI for creating things
 and items.  Furthermore it will most likely not work out of the box for everybody but may be a good start for whoever
 wants to automate that process.
 
 It has been tested with an **ETS 4** and **ETS 5** project file and runs on a Mac thus it should work
-on any Unix system.  Also passed a rough 1st test on Windows 7.
+on any Unix system.  Also tested on Windows 7.
 
 
 ## Prerequisites
@@ -153,8 +153,14 @@ IN_ENCODING = r"utf8"
 OUT_ENCODING = r"utf8"
 ```
 
+### NEW:  20191012
+
+Now supporting multiple KNX project files.  Thanks to @rmayr
+
+Also added option `-c` to use alternative config file.
+
 --------
 
-If you have any issue feel free to contact me or open an issue in the repository.
+ If you have any issue feel free to contact me or open an issue in the repository.
 
 Have fun...
