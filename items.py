@@ -191,7 +191,7 @@ class OpenHABItem(Item):
                 actors = []
                 try:
                     actors = list(filter(lambda x: self.inList(x.device_id, config.ACTORS),
-                                          selection))
+                                         selection))
                 except (NameError, AttributeError) as excep:
                     pass
 

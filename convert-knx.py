@@ -247,8 +247,8 @@ def writeItemFiles():
 
             outfilename = os.path.join(config.ITEM_RESULT_DIR, path.basename(myfile))
             myfile = myfile.strip('\\\r\n').strip()
-            with open(myfile, 'r', encoding=config.IN_ENCODING) as infile, \
-                 open(outfilename, 'w', encoding=config.OUT_ENCODING) as outfile:
+            with (open(myfile, 'r', encoding=config.IN_ENCODING) as infile,
+                  open(outfilename, 'w', encoding=config.OUT_ENCODING) as outfile):
 
                 # read original item file and replace knx2 values
                 for line in infile.readlines():
@@ -323,8 +323,8 @@ def writeFiles():
     # print left over KNXItems to ITEMS_UNUSED_FILE
     devc = None
     devu = None
-    with open(config.ITEMS_UNUSED_FILE, 'w', encoding=config.OUT_ENCODING) as unusedfile, \
-         open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding=config.OUT_ENCODING) as controlfile:
+    with (open(config.ITEMS_UNUSED_FILE, 'w', encoding=config.OUT_ENCODING) as unusedfile,
+          open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding=config.OUT_ENCODING) as controlfile):
 
         print('// These control switches should be added to get event from wall switches', file=controlfile)
 

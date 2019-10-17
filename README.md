@@ -1,6 +1,6 @@
 # ets2openHAB 2.x conversion script
 
-This is a repository of a experimental script to help moving from openHAB 1.x knx1 binding to the new openHAB 2.x knx
+This script automates the move from openHAB 1.x knx1 binding to the new openHAB 2.x knx
 binding.  It converts existing knx1 item files and generates a knx.thing file.  Optionally it can also read the
 `knxproj` file(s).
 
