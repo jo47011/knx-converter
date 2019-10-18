@@ -23,40 +23,40 @@ from items import KNXItem, OpenHABItem
 from myargs import config
 
 
-def readParts(type, root, part, name=''):
+def read_parts(type, root, part, name=''):
     '''Recursively reads all parts from ETS root.
     '''
     # print(f"reading {part.attrib['Name']}")
     name = (name + " " + part.attrib['Name']).lstrip()
 
     # find all devices in building
-    for devref in part.findall(getNsURL(root) + config.FIND_DEVICEREF):
-        readDevice(root, devref.attrib['RefId'], name)
+    for devref in part.findall(get_root_tag(root) + config.FIND_DEVICEREF):
+        read_device(root, devref.attrib['RefId'], name)
 
     # apply for all building sub-parts
     for subpart in part.findall(type):
-        readParts(type, root, subpart, name)
+        read_parts(type, root, subpart, name)
 
 
-def readDevice(root, ref, building):
+def read_device(root, ref, building):
     ''' Reads top level ref device and all containing group addresses from ETS root.
     '''
-    device = root.findall(getNsURL(root) + config.FIND_DEVICE + "[@Id='" + ref + "']")[0]
+    device = root.findall(get_root_tag(root) + config.FIND_DEVICE + "[@Id='" + ref + "']")[0]
 
-    for comobj in device.findall(getNsURL(root) + config.FIND_COMREF):
+    for comobj in device.findall(get_root_tag(root) + config.FIND_COMREF):
         if 'DatapointType' not in comobj.attrib.keys():
             continue
 
         dpt = comobj.attrib['DatapointType']  # FIXME: need some mapping here to dtps
 
-        for connector in comobj.findall(getNsURL(root) + config.FIND_CONNECTOR):
+        for connector in comobj.findall(get_root_tag(root) + config.FIND_CONNECTOR):
 
-            for send in (connector.findall(getNsURL(root) + config.FIND_SEND) +
-                         connector.findall(getNsURL(root) + config.FIND_RECEIVE)):
+            for send in (connector.findall(get_root_tag(root) + config.FIND_SEND) +
+                         connector.findall(get_root_tag(root) + config.FIND_RECEIVE)):
 
                 if 'GroupAddressRefId' in send.keys():
                     ga_ref = send.attrib['GroupAddressRefId']
-                    ga = root.findall(getNsURL(root) + config.FIND_GA + "[@Id='" + ga_ref + "']")[0]
+                    ga = root.findall(get_root_tag(root) + config.FIND_GA + "[@Id='" + ga_ref + "']")[0]
                     ga_str = ga2str(int(ga.attrib['Address']))
 
                     if len(ga_str) > 0:
@@ -74,11 +74,11 @@ def ga2str(ga):
     return "%d/%d/%d" % ((ga >> 11) & 0xf, (ga >> 8) & 0x7, ga & 0xff)
 
 
-def cleanupFeedback():
+def cleanup_feedback():
     '''Removes KNXItems which are known feedback group addresses
     '''
 
-    def isAssignedFeedback(item1, item2):
+    def is_assigned_feedback(item1, item2):
         '''Returns true if group address of a device is already used as a feedback address at the same device
         '''
         result = (item1 != item2 and                                  # not the same item
@@ -93,24 +93,24 @@ def cleanupFeedback():
 
     # remove already assigned feedback GAs at the same device
     for item in filter(lambda x: x.ohItem is not None and x.ohItem.feedback, KNXItem.items()):
-        for foundItem in [x for x in KNXItem.items() if isAssignedFeedback(x, item)]:
+        for foundItem in [x for x in KNXItem.items() if is_assigned_feedback(x, item)]:
             KNXItem.remove(foundItem)
 
     # print(f"Debug: remove feedback {before} => {len(KNXItem.items())}")
 
 
-def createGenericControls():
+def create_generic_controls():
     '''Creates a generic control entry for any control that is used in an item file
     '''
     allControls = list(od.fromkeys(filter(lambda x: x.ohItem is not None
                                           and x.isControl
-                                          and x.isWantedControl(), KNXItem.items())).keys())
+                                          and x.is_wanted_control(), KNXItem.items())).keys())
     for item in allControls:
-        entry = KNXItem.createGeneric(ohItem=item.ohItem, isControl=True)
+        entry = KNXItem.create_generic(ohItem=item.ohItem, isControl=True)
         item.ignore = True
 
 
-def getNsURL(root):
+def get_root_tag(root):
     '''Checks for KNX tag in root node.  Script is terminated if not found.
     '''
     if not root.tag.endswith('KNX'):
@@ -120,7 +120,7 @@ def getNsURL(root):
     return './/' + root.tag[:-3]    # .//{http://knx.org/xml/project/11}
 
 
-def readETSFile():
+def read_ets_file():
     '''Reads the ETS Project file if defined.
     '''
     try:
@@ -133,24 +133,24 @@ def readETSFile():
         for projectfile in config.PROJECTFILES.split():
             project = ET.parse(projectfile)
             root = project.getroot()
-            buildings = root.find(getNsURL(root) + config.FIND_BUILDINGS)
+            buildings = root.find(get_root_tag(root) + config.FIND_BUILDINGS)
             print(f"reading {projectfile}")
 
             if buildings is None:
                 print("Buildings not found")
             else:
                 for part in buildings:
-                    readParts(config.FIND_BUILDINGPART, root, part)
+                    read_parts(config.FIND_BUILDINGPART, root, part)
 
-            trades = root.find(getNsURL(root) + config.FIND_TRADES)
+            trades = root.find(get_root_tag(root) + config.FIND_TRADES)
 
             if trades is not None:
                 for part in trades:
                     # print(part)
-                    readParts(config.FIND_TRADEPART, root, part)
+                    read_parts(config.FIND_TRADEPART, root, part)
 
 
-def readOHFiles():
+def read_oh_files():
     '''Reads the OpenHAB item file(s) if defined
     '''
     try:
@@ -171,7 +171,7 @@ def readOHFiles():
                         item = OpenHABItem(line=line)
 
 
-def writeThingFile(filter, filename, comment=''):
+def write_thing_file(filter, filename, comment=''):
     '''Write openhab thing file.  See config.THING*
     '''
     # create path to outfile if it doesn't existant
@@ -197,7 +197,7 @@ def writeThingFile(filter, filename, comment=''):
                     dev = config.DEVICE_EMPTY.replace('<generic>', DEVICE_GENERIC)
                 else:
                     dev = config.DEVICE.replace('<address>', current) \
-                                       .replace('<generic>', item.getDeviceName()) \
+                                       .replace('<generic>', item.get_device_name()) \
                                        .replace('<building>', item.building) \
                                 .replace('<device_id>', item.device_id)
 
@@ -206,21 +206,21 @@ def writeThingFile(filter, filename, comment=''):
             # print OH Item
             control = unique = direction = ''
             if item.isControl:
-                if not item.isWantedControl():
+                if not item.is_wanted_control():
                     continue
 
                 control = "-control"
-                if item.isGeneric:
+                if item.is_generic:
                     unique = config.CONTROL_SUFFIX
                 else:
-                    unique = item.getDeviceName('_')
+                    unique = item.get_device_name('_')
 
             if item.ohItem:
                 print(f'\tType {item.ohItem.type.lower()}{control} : ',
                       f'{item.ohItem.name}{unique} "{item.name}" [ {item.ohItem.groupaddress_oh2} ]', file=thingfile)
             else:
                 print(f'\tType {config.UNUSED_TYPE}{control} : ',
-                      f'{item.getID()}{unique} "{item.name}" [ ga="{item.address}" ]',
+                      f'{item.get_id()}{unique} "{item.name}" [ ga="{item.address}" ]',
                       file=thingfile)
 
         # print footer
@@ -229,7 +229,7 @@ def writeThingFile(filter, filename, comment=''):
         print(f"written: {filename}")
 
 
-def writeItemFiles():
+def write_item_files():
     '''Write openhab item files.  See config.ITEMS_FILES.
     '''
     try:
@@ -247,8 +247,9 @@ def writeItemFiles():
 
             outfilename = os.path.join(config.ITEM_RESULT_DIR, path.basename(myfile))
             myfile = myfile.strip('\\\r\n').strip()
-            with (open(myfile, 'r', encoding=config.IN_ENCODING) as infile,
-                  open(outfilename, 'w', encoding=config.OUT_ENCODING) as outfile):
+
+            with open(myfile, 'r', encoding=config.IN_ENCODING) as infile, \
+                    open(outfilename, 'w', encoding=config.OUT_ENCODING) as outfile:
 
                 # read original item file and replace knx2 values
                 for line in infile.readlines():
@@ -272,9 +273,9 @@ def writeItemFiles():
                         if len(items) == 0:
                             # seems like we're running w/o ETS project file so create a generic entry
                             name = line.split()[1:2][0]
-                            search = [x for x in OpenHABItem.allItems if x.address == knx and x.name == name]
+                            search = [x for x in OpenHABItem.all_items if x.address == knx and x.name == name]
                             if len(search) == 1:
-                                item = KNXItem.createGeneric(ohItem=search[0])
+                                item = KNXItem.create_generic(ohItem=search[0])
                             else:
                                 # we're lost now so we give up
                                 print(f"ERROR: OH entry {name} w/ Group Address {knx} not found.")
@@ -289,42 +290,42 @@ def writeItemFiles():
 
                             # Use 1st one
                             hit = next(obj for obj in items if obj.ohItem is not None)
-                            item = KNXItem.createGeneric(ohItem=hit.ohItem)
+                            item = KNXItem.create_generic(ohItem=hit.ohItem)
 
                         else:
                             # exactly one item entry found
                             item = items[0]
 
-                        print(item.getItemRepresentation(line), file=outfile, end='')
+                        print(item.get_item_representation(line), file=outfile, end='')
                         item.exported = True
 
                         # add generic control item if aplicable
-                        items = [x for x in KNXItem.items() if x.getID() == item.getID()
-                                 and x.isGeneric and x.isControl and item.isWantedControl()]
+                        items = [x for x in KNXItem.items() if x.get_id() == item.get_id()
+                                 and x.is_generic and x.isControl and item.is_wanted_control()]
                         if len(items) > 1:
                             # should not happen there should be only one generic item
                             print(f"ERROR: Multiple generic controls w/ Group Address {knx} found.")
                             sys.exit(1)
 
                         if len(items) == 1:
-                            print(items[0].getItemRepresentation(), file=outfile)
+                            print(items[0].get_item_representation(), file=outfile)
                             items[0].exported = True
 
             print(f"written: {outfilename}")
 
 
-def writeFiles():
+def write_files():
     '''Link OpenHABitems and KNXItems and writes
     ITEMS_FILES, THINGS_FILE, ITEMS_UNUSED_FILE, THINGS_UNUSED_FILE files in knx2 format.
     '''
 
-    writeItemFiles()
+    write_item_files()
 
     # print left over KNXItems to ITEMS_UNUSED_FILE
     devc = None
     devu = None
-    with (open(config.ITEMS_UNUSED_FILE, 'w', encoding=config.OUT_ENCODING) as unusedfile,
-          open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding=config.OUT_ENCODING) as controlfile):
+    with open(config.ITEMS_UNUSED_FILE, 'w', encoding=config.OUT_ENCODING) as unusedfile, \
+            open(config.ITEMS_UNUSED_CONTROLS_FILE, 'w', encoding=config.OUT_ENCODING) as controlfile:
 
         print('// These control switches should be added to get event from wall switches', file=controlfile)
 
@@ -335,30 +336,31 @@ def writeFiles():
 
             if item.ohItem is None:
                 file = unusedfile
-                if devu != item.getDeviceName():
-                    devu = item.getDeviceName()
+                if devu != item.get_device_name():
+                    devu = item.get_device_name()
                     print('', file=file)
             else:
                 file = controlfile
-                if devc != item.getDeviceName():
-                    devc = item.getDeviceName()
+                if devc != item.get_device_name():
+                    devc = item.get_device_name()
                     print('', file=file)
 
-            print(item.getItemRepresentation(), file=file)
+            print(item.get_item_representation(), file=file)
 
         print(f"written: {config.ITEMS_UNUSED_CONTROLS_FILE}")
         print(f"written: {config.ITEMS_UNUSED_FILE}")
 
     # write thing files
-    writeThingFile(filter(lambda x: x.ohItem is not None and not x.ignore
-                          and (x.isGeneric or not x.isControl), KNXItem.items()),
-                   config.THINGS_FILE)
+    write_thing_file(filter(lambda x: x.ohItem is not None and not x.ignore
+                            and (x.is_generic or not x.isControl), KNXItem.items()),
+                     config.THINGS_FILE)
 
-    writeThingFile(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()), config.THINGS_UNUSED_FILE,
-                   '// These things are available in your ETS but are not configured/used in any of your item files\n')
+    comment = '// These things are available in your ETS but are not configured/used in any of your item files\n'
+    write_thing_file(filter(lambda x: not x.exported and not x.ignore, KNXItem.items()), config.THINGS_UNUSED_FILE,
+                     comment)
 
 
-def checkPythonVersion():
+def check_python_version():
     # checks for minimum python version 3.7
     if sys.version_info[0] < 3 or sys.version_info[1] < 7:
         raise Exception("Must be using Python 3.7")
@@ -368,17 +370,17 @@ def checkPythonVersion():
 if __name__ == '__main__':
 
     # check minimum ptyhon version 1st
-    checkPythonVersion()
+    check_python_version()
 
     # read ets & openhab files
-    readETSFile()
-    readOHFiles()
+    read_ets_file()
+    read_oh_files()
 
     # remove already assigned feedback addresses
-    cleanupFeedback()
+    cleanup_feedback()
 
     # create generic controls for used items
-    createGenericControls()
+    create_generic_controls()
 
     # debug output
     try:
@@ -395,4 +397,4 @@ if __name__ == '__main__':
     except (NameError, AttributeError) as excep:
         pass
 
-    writeFiles()
+    write_files()
