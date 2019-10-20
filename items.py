@@ -77,12 +77,12 @@ class OpenHABItem(Item):
         if not OpenHABItem.all_items:
             try:
                 OpenHABItem.autoupdateTrue = config.AUTOUPDATE_TRUE.replace(" ", "").split(",")
-            except (NameError, AttributeError) as excep:
+            except (NameError, AttributeError):
                 pass
 
             try:
                 OpenHABItem.autoupdateFalse = config.AUTOUPDATE_FALSE.replace(" ", "").split(",")
-            except (NameError, AttributeError) as excep:
+            except (NameError, AttributeError):
                 pass
 
     def __post_init__(self):
@@ -146,7 +146,7 @@ class OpenHABItem(Item):
             try:
                 u, s, p = map(str.strip, re.sub(r'knx[ \t]*=|["\']', '', ga).split(',')[:3])
                 self.groupaddress_oh2 = f'upDown = "{u}", stopMove = "{s}", position = "{p}"'
-            except (ValueError) as excep:
+            except (ValueError):
                 print("ERROR: The following Rollershutter should have 3 KNX entries for: upDown, stopMove, position")
                 print(self.line)
 
@@ -172,7 +172,7 @@ class OpenHABItem(Item):
             selection = devices.copy()
             try:
                 selection = list(filter(lambda x: not self.in_list(x.device_id, config.IGNORE_DEVICES), devices))
-            except (NameError, AttributeError) as excep:
+            except (NameError, AttributeError):
                 pass
 
             if len(devices) == 0:
@@ -192,7 +192,7 @@ class OpenHABItem(Item):
                 try:
                     actors = list(filter(lambda x: self.in_list(x.device_id, config.ACTORS),
                                          selection))
-                except (NameError, AttributeError) as excep:
+                except (NameError, AttributeError):
                     pass
 
                 if len(actors) == 0:
@@ -207,7 +207,7 @@ class OpenHABItem(Item):
                 controls = []
                 try:
                     controls = list(filter(lambda x: self.in_list(x.device_id, config.CONTROLS), selection))
-                except (NameError, AttributeError) as excep:
+                except (NameError, AttributeError):
                     pass
 
                 for entry in controls:
@@ -311,7 +311,7 @@ class KNXItem(Item):
         if not KNXItem.all_items:
             try:
                 KNXItem.wantedControls = config.WANTED_CONTROLS.replace(" ", "").split(",")
-            except (NameError, AttributeError) as excep:
+            except (NameError, AttributeError):
                 pass
 
     def __post_init__(self):

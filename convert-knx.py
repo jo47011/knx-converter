@@ -13,7 +13,6 @@ Disclaimer:
 
 import os
 import sys
-from collections import namedtuple
 import xml.etree.ElementTree as ET
 from collections import OrderedDict as od
 import re
@@ -47,7 +46,7 @@ def read_device(root, ref, building):
         if 'DatapointType' not in comobj.attrib.keys():
             continue
 
-        dpt = comobj.attrib['DatapointType']  # FIXME: need some mapping here to dtps
+        # dpt = comobj.attrib['DatapointType']  # FIXME: need some mapping here to dtps
 
         for connector in comobj.findall(get_root_tag(root) + config.FIND_CONNECTOR):
 
@@ -89,14 +88,10 @@ def cleanup_feedback():
 
         return result
 
-    before = len(KNXItem.items())
-
     # remove already assigned feedback GAs at the same device
     for item in filter(lambda x: x.ohItem is not None and x.ohItem.feedback, KNXItem.items()):
         for foundItem in [x for x in KNXItem.items() if is_assigned_feedback(x, item)]:
             KNXItem.remove(foundItem)
-
-    # print(f"Debug: remove feedback {before} => {len(KNXItem.items())}")
 
 
 def create_generic_controls():
@@ -106,7 +101,7 @@ def create_generic_controls():
                                           and x.isControl
                                           and x.is_wanted_control(), KNXItem.items())).keys())
     for item in allControls:
-        entry = KNXItem.create_generic(ohItem=item.ohItem, isControl=True)
+        KNXItem.create_generic(ohItem=item.ohItem, isControl=True)
         item.ignore = True
 
 
@@ -125,7 +120,7 @@ def read_ets_file():
     '''
     try:
         config.PROJECTFILES
-    except (NameError, AttributeError) as excep:
+    except (NameError, AttributeError):
         config.PROJECTFILES = None
         print('PROJECTFILE is not defined (see config.py), so we proceed w/o ETS input.')
 
@@ -155,7 +150,7 @@ def read_oh_files():
     '''
     try:
         config.ITEMS_FILES
-    except (NameError, AttributeError) as excep:
+    except (NameError, AttributeError):
         config.ITEMS_FILES = None
         print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
 
@@ -167,8 +162,8 @@ def read_oh_files():
                 for line in infile.readlines():
                     # knx items only, remove trailing comments //
                     if line.startswith(config.CHANNELS) and re.match(r'.*knx[ ]*=.*', re.sub(r'//.*', '', line)):
-                        # remember values for things file
-                        item = OpenHABItem(line=line)
+                        # create item per row
+                        OpenHABItem(line=line)
 
 
 def write_thing_file(filter, filename, comment=''):
@@ -194,7 +189,7 @@ def write_thing_file(filter, filename, comment=''):
                     print("    }", file=thingfile)
                 current = item.device_address
                 if current is None:
-                    dev = config.DEVICE_EMPTY.replace('<generic>', DEVICE_GENERIC)
+                    dev = config.DEVICE_EMPTY.replace('<generic>', config.DEVICE_GENERIC)
                 else:
                     dev = config.DEVICE.replace('<address>', current) \
                                        .replace('<generic>', item.get_device_name()) \
@@ -204,7 +199,7 @@ def write_thing_file(filter, filename, comment=''):
                 print(dev, file=thingfile)
 
             # print OH Item
-            control = unique = direction = ''
+            control = unique = ''
             if item.isControl:
                 if not item.is_wanted_control():
                     continue
@@ -234,7 +229,7 @@ def write_item_files():
     '''
     try:
         config.ITEMS_FILES
-    except (NameError, AttributeError) as excep:
+    except (NameError, AttributeError):
         config.ITEMS_FILES = None
         print('ITEMS_FILES are not defined (see config.py), so we proceed w/o OpenHAB item files.')
 
@@ -387,14 +382,14 @@ if __name__ == '__main__':
         with open(config.DEBUG_KNX, 'w') as file:
             for item in sorted(KNXItem.items()):
                 print(item, file=file)
-    except (NameError, AttributeError) as excep:
+    except (NameError, AttributeError):
         pass
 
     try:
         with open(config.DEBUG_OH, 'w') as file:
             for item in sorted(OpenHABItem.items()):
                 print(item, file=file)
-    except (NameError, AttributeError) as excep:
+    except (NameError, AttributeError):
         pass
 
     write_files()
