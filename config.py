@@ -1,4 +1,4 @@
-# Adjust this file to your settings
+# Adjust this file to your setup
 
 # file encodings
 IN_ENCODING = r"utf8"
@@ -47,10 +47,6 @@ UNUSED_TYPE = 'Switch'
 
 # Suffix for generic control items
 CONTROL_SUFFIX = '_Control'
-
-# If defined, only these controls will be added to the item and things file.
-# If undefined all possible controls will be created, this may be a good start
-# but may flood your system.
 
 # If defined, only these controls will be added to the items and things file.
 # If undefined all possible controls will be created, this may be a good start
